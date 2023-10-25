@@ -1,0 +1,45 @@
+const Partner = require('../models/partnerModel');
+const jwt = require('jsonwebtoken');
+const asyncHandler = require('express-async-handler');
+
+const authMiddleware = asyncHandler(async (req, res, next) => {
+  let token;
+  
+  if (req?.headers?.authorization?.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+    try {
+      if (token) {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log('Decoded Token:', decoded);
+
+        const user = await Partner.findByPk(decoded?.id); 
+        console.log('Found User:', user);
+
+        if (user) {
+          req.user = user;
+          next();
+        } else {
+          throw new Error('User not found');
+        }
+      }
+    } catch (error) {
+      console.error('Authentication Error:', error);
+      throw new Error('Not authorized, please login again');
+    }
+  } else {
+    throw new Error('There is no token attached');
+  }
+});
+
+
+const isPartner = asyncHandler(async (req, res, next) => {
+  const { email } = req.user;
+  const partnerUser = await Partner.findOne({ where: { email } }); 
+  if (partnerUser && partnerUser.role === 'Partner') {
+    next();
+  } else {
+    throw new Error('You are not Partner');
+  }
+});
+
+module.exports = { authMiddleware, isPartner };
