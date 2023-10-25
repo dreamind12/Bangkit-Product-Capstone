@@ -6,7 +6,7 @@ const dotenv = require("dotenv").config();
 const PORT = 8000;
 const bodyParser = require('body-parser');
 const partnerRouter = require('./routes/partnerRoute');
-const productRouter = require('./routes/productRoute');
+const roomRouter = require('./routes/roomRoute');
 const placeRouter = require('./routes/placeRoute');
 
 const app = express();
@@ -18,7 +18,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
 app.use('/partner', partnerRouter);
-// app.use('/product', productRouter);
+app.use('/room', roomRouter);
 // app.use('/place', placeRouter);
 
 app.listen(PORT, ()=>{
