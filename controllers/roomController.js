@@ -1,8 +1,10 @@
 const asyncHandler = require('express-async-handler');
-const Room = require('../models/roomModel');
+const Room = require('../models/product/roomModel');
 const Partner = require('../models/partnerModel');
 const Rating = require('../models/ratingModel');
 const Invoice = require('../models/invoiceModel');
+const Like = require('../models/likewish/likeModel');
+const Wishlist = require('../models/likewish/wishlistModel');
 const path = require('path');
 const fs = require('fs');
 const {Op,Sequelize} = require('sequelize');
@@ -199,33 +201,68 @@ const deleteRoom = asyncHandler(async(req, res)=>{
 
 const likeRoom = asyncHandler(async (req, res) => {
   const { roomId } = req.params;
-  const { userId } = req.user.id;
+  const userId = req.user.id;
 
   try {
-    const room = await Room.findOne({ where: { id: roomId } });
-    console.log('RoomId:', roomId);
+    // Check if the user has already liked the Room
+    const existingLike = await Like.findOne({
+      where: {
+        userId,
+        productId: roomId,
+        productType: 'Room',
+      },
+    });
+
+    // Find the corresponding room
+    const room = await Room.findByPk(roomId);
 
     if (!room) {
       return res.status(404).json({ message: "Room not found" });
     }
 
-    // Check if the user has already liked the Room
-    const isLiked = room.likes.some((like) => like.userId === userId);
-
-    if (isLiked) {
+    if (existingLike) {
       // User already liked the Room, so unlike it
-      room.likes = room.likes.filter((like) => like.userId !== userId);
+      await existingLike.destroy();
+
+      // Recalculate the total likes and update the Room model
+      const totalLikes = await Like.count({
+        where: {
+          productId: roomId,
+          productType: 'Room',
+        },
+      });
+
+      room.totalLikes = totalLikes;
+      await room.save();
+
+      res.json({
+        message: "Room un-liked successfully",
+        likesCount: totalLikes,
+      });
     } else {
       // User didn't like the Room, so add a like
-      room.likes.push({ userId });
+      await Like.create({
+        userId,
+        productId: roomId,
+        productType: 'Room',
+      });
+
+      // Recalculate the total likes and update the Room model
+      const totalLikes = await Like.count({
+        where: {
+          productId: roomId,
+          productType: 'Room',
+        },
+      });
+
+      room.totalLikes = totalLikes;
+      await room.save();
+
+      res.json({
+        message: "Room liked successfully",
+        likesCount: totalLikes,
+      });
     }
-
-    await room.save();
-
-    res.json({
-      message: isLiked ? "Room un-liked successfully" : "Room liked successfully",
-      likesCount: room.likes.length,
-    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -233,26 +270,56 @@ const likeRoom = asyncHandler(async (req, res) => {
 });
 
 const wishlistRoom = asyncHandler(async (req, res) => {
-  const { RoomId } = req.params;
-  const { userId } = req.user;
-  const Room = await Room.findOne({ where: { id: RoomId } });
-  if (!Room) {
-    return res.status(404).json({ message: "Room not found" });
+  const { roomId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    // Check if the user has already wishlisted the Room
+    const existingWishlist = await Wishlist.findOne({
+      where: {
+        userId,
+        productId: roomId,
+        productType: 'Room',
+      },
+    });
+
+    // Get the room data
+    const room = await Room.findOne({ where: { id: roomId } });
+
+    if (existingWishlist) {
+      // User already wishlisted the Room, so remove it from the wishlist
+      await existingWishlist.destroy();
+      res.json({ message: "Room removed from wishlist", room });
+    } else {
+      // User didn't wishlist the Room, so add it to the wishlist
+      await Wishlist.create({
+        userId,
+        productId: roomId,
+        productType: 'Room',
+      });
+      res.json({ message: "Room added to wishlist", room });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
-  // Check if the user has already wishlisted the Room
-  const isWishlisted = Room.wishlists.some((wishlist) => wishlist.userId === userId);
-  if (isWishlisted) {
-    // User already wishlisted the Room, so unwishlist it
-    Room.wishlists = Room.wishlists.filter((wishlist) => wishlist.userId !== userId);
-  } else {
-    // User didn't wishlist the Room, so add a wishlist
-    Room.wishlists.push({ userId });
+});
+
+const getAllWishlists = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const wishlists = await Wishlist.findAll({ where: { userId } });
+    // Get the room data for each wishlist
+    const rooms = await Promise.all(
+      wishlists.map(async (wishlist) => {
+        return await Room.findOne({ where: { id: wishlist.productId } });
+      })
+    );
+    res.json({ wishlists, rooms });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
-  await Room.save();
-  res.json({
-    message: isWishlisted ? "Room un-wishlisted successfully" : "Room wishlisted successfully",
-    wishlistsCount: Room.wishlists.length,
-  });
 });
 
 const getAllInvoices = asyncHandler(async (req, res) => {
@@ -274,5 +341,6 @@ module.exports = {
   deleteRoom,
   likeRoom,
   wishlistRoom,
+  getAllWishlists,
   getAllInvoices,
 }
