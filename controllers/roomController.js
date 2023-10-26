@@ -38,7 +38,6 @@ const addRoom = asyncHandler(async (req, res) => {
         const data = await Room.create({
           name: req.body.name,
           description: req.body.description,
-          category: req.body.category,
           price: req.body.price,
           numberOfAdults: req.body.numberOfAdults,
           numberOfChildren: req.body.numberOfChildren,
@@ -118,7 +117,6 @@ const updateRoom = asyncHandler(async(req, res) => {
           popularLocation: req.body.popularLocation,
           checkInCheckOut: req.body.checkInCheckOut,
           roomSize: req.body.roomSize,
-          category: req.body.category,
           image: fileName,
           url: url,
           partnerId: userId,
