@@ -1,32 +1,43 @@
 const Sequelize = require("sequelize");
-const Partner = require('./partnerModel');
-const Rating = require('./ratingModel');
-const db = require("../config/Database");
+const Partner = require('../partnerModel');
+const Rating = require('../payment/ratingModel');
+const db = require("../../config/Database");
 
-const Guide = db.define("Guide", {
+const Room = db.define("Room", {
 name: Sequelize.STRING,
 image: Sequelize.STRING,
 url: Sequelize.STRING,
 category: {
   type: Sequelize.STRING,
-  defaultValue: "Tour",
+  defaultValue: "Hotel"
 },
 description: {
-  type: Sequelize.TEXT,
-},
-address: {
   type: Sequelize.STRING,
 },
 price: {
   type: Sequelize.FLOAT,
 },
-duration: {
+numberOfAdults: {
   type: Sequelize.INTEGER,
+  allowNull: false,
+},
+numberOfChildren: {
+  type: Sequelize.INTEGER,
+  allowNull: false,
+},
+bedOption: {
+  type: Sequelize.STRING,
 },
 mainFacilities: {
   type: Sequelize.STRING,
 },
-features: {
+popularLocation: {
+  type: Sequelize.STRING,
+},
+checkInCheckOut: {
+  type: Sequelize.STRING,
+},
+roomSize: {
   type: Sequelize.STRING,
 },
 soldQuantity: {
@@ -41,19 +52,9 @@ averageRating: {
   type: Sequelize.FLOAT,
   defaultValue: 0,
 },
-likes: {
+totalLikes: {
     type: Sequelize.INTEGER,
     defaultValue: 0,
-},
-wishlists: {
-    type: Sequelize.INTEGER,
-    defaultValue: 0,
-},
-latitude: {
-  type: Sequelize.FLOAT,
-},
-longitude: {
-  type: Sequelize.FLOAT,
 },
 partnerId: {
   type: Sequelize.INTEGER, 
@@ -63,16 +64,16 @@ partnerId: {
   freezeTableName: true,
 })
 
-Guide.belongsTo(Partner, { foreignKey: 'partnerId' });
-Guide.hasMany(Rating, { foreignKey: 'GuideId' });
+Room.belongsTo(Partner, { foreignKey: 'partnerId' });
+Room.hasMany(Rating, { foreignKey: 'RoomId' });
 
-module.exports = Guide;
+module.exports = Room;
 
 (async()=>{
   await db.sync()
 })
 
-// Guide.sync().then((data)=>{
+// Room.sync().then((data)=>{
 // console.log("Table success create");
 // }).catch((err)=>{
 //   console.log("Table Error when create")

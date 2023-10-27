@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
-const db = require('../config/Database');
-const Partner = require('./partnerModel');
+const db = require('../../config/Database');
+const Partner = require('../partnerModel');
 
 const Invoice = db.define('Invoice', {
   orderDate: {

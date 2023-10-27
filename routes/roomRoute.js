@@ -1,5 +1,5 @@
 const express = require('express');
-const { addRoom, getRoom, getAllRoom, updateRoom, deleteRoom, likeRoom, wishlistRoom, getAllWishlists } = require('../controllers/roomController');
+const { addRoom, getRoom, getAllRoom, updateRoom, deleteRoom, likeRoom, wishlistRoom, getAllWishlists } = require('../controllers/product/roomController');
 const {authMiddleware, isPartner} = require('../middlewares/authMiddleware');
 const router = express.Router();
 

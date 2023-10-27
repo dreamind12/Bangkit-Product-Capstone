@@ -1,18 +1,21 @@
 const Sequelize = require("sequelize");
-const Partner = require('./partnerModel');
-const Rating = require('./ratingModel');
-const db = require("../config/Database");
+const Partner = require('../partnerModel');
+const Rating = require('../payment/ratingModel');
+const db = require("../../config/Database");
 
-const Attraction = db.define("Attraction", {
+const Guide = db.define("Guide", {
 name: Sequelize.STRING,
 image: Sequelize.STRING,
 url: Sequelize.STRING,
 category: {
   type: Sequelize.STRING,
-  defaultValue: "Attraction",
+  defaultValue: "Tour",
 },
 description: {
   type: Sequelize.TEXT,
+},
+address: {
+  type: Sequelize.STRING,
 },
 price: {
   type: Sequelize.FLOAT,
@@ -38,13 +41,19 @@ averageRating: {
   type: Sequelize.FLOAT,
   defaultValue: 0,
 },
-likes: {
+totalLikes: {
     type: Sequelize.INTEGER,
     defaultValue: 0,
 },
 wishlists: {
     type: Sequelize.INTEGER,
     defaultValue: 0,
+},
+latitude: {
+  type: Sequelize.FLOAT,
+},
+longitude: {
+  type: Sequelize.FLOAT,
 },
 partnerId: {
   type: Sequelize.INTEGER, 
@@ -54,16 +63,16 @@ partnerId: {
   freezeTableName: true,
 })
 
-Attraction.belongsTo(Partner, { foreignKey: 'partnerId' });
-Attraction.hasMany(Rating, { foreignKey: 'AttractionId' });
+Guide.belongsTo(Partner, { foreignKey: 'partnerId' });
+Guide.hasMany(Rating, { foreignKey: 'GuideId' });
 
-module.exports = Attraction;
+module.exports = Guide;
 
 (async()=>{
   await db.sync()
 })
 
-// Attraction.sync().then((data)=>{
+// Guide.sync().then((data)=>{
 // console.log("Table success create");
 // }).catch((err)=>{
 //   console.log("Table Error when create")

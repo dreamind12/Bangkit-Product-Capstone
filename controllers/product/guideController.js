@@ -1,8 +1,10 @@
 const asyncHandler = require('express-async-handler');
-const Guide = require('../models/guideModel');
-const Partner = require('../models/partnerModel');
-const Rating = require('../models/ratingModel');
-const Invoice = require('../models/invoiceModel');
+const Guide = require('../../models/product/guideModel');
+const Partner = require('../../models/partnerModel');
+const Rating = require('../../models/payment/ratingModel');
+const Invoice = require('../../models/payment/invoiceModel');
+const Like = require('../../models/likewish/likeModel');
+const Wishlist = require('../../models/likewish/wishlistModel');
 const path = require('path');
 const fs = require('fs');
 const {Op,Sequelize} = require('sequelize');
@@ -237,10 +239,136 @@ const deleteGuide = asyncHandler(async(req, res)=>{
   }
 });
 
+const likeGuide = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  try {
+    // Check if the user has already liked the Guide
+    const existingLike = await Like.findOne({
+      where: {
+        userId,
+        productId: id,
+        productType: 'Guide',
+      },
+    });
+
+    // Find the corresponding guide
+    const guide = await Guide.findByPk(id);
+
+    if (!guide) {
+      return res.status(404).json({ message: "Guide not found" });
+    }
+
+    if (existingLike) {
+      // User already liked the Guide, so unlike it
+      await existingLike.destroy();
+
+      // Recalculate the total likes and update the Guide model
+      const totalLikes = await Like.count({
+        where: {
+          productId: id,
+          productType: 'Guide',
+        },
+      });
+
+      guide.totalLikes = totalLikes;
+      await guide.save();
+
+      res.json({
+        message: "Guide un-liked successfully",
+        likesCount: totalLikes,
+      });
+    } else {
+      // User didn't like the Guide, so add a like
+      await Like.create({
+        userId,
+        productId: id,
+        productType: 'Guide',
+      });
+
+      // Recalculate the total likes and update the Guide model
+      const totalLikes = await Like.count({
+        where: {
+          productId: id,
+          productType: 'Guide',
+        },
+      });
+
+      guide.totalLikes = totalLikes;
+      await guide.save();
+
+      res.json({
+        message: "Guide liked successfully",
+        likesCount: totalLikes,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+const wishlistGuide = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  try {
+    // Check if the user has already wishlisted the Guide
+    const existingWishlist = await Wishlist.findOne({
+      where: {
+        userId,
+        productId: id,
+        productType: 'Guide',
+      },
+    });
+
+    // Get the guide data
+    const guide = await Guide.findOne({ where: { id: id } });
+
+    if (existingWishlist) {
+      // User already wishlisted the Guide, so remove it from the wishlist
+      await existingWishlist.destroy();
+      res.json({ message: "Guide removed from wishlist", guide });
+    } else {
+      // User didn't wishlist the Guide, so add it to the wishlist
+      await Wishlist.create({
+        userId,
+        productId: id,
+        productType: 'Guide',
+      });
+      res.json({ message: "Guide added to wishlist", guide });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+const getAllWishlists = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const wishlists = await Wishlist.findAll({ where: { userId } });
+    // Get the guide data for each wishlist
+    const guides = await Promise.all(
+      wishlists.map(async (wishlist) => {
+        return await Guide.findOne({ where: { id: wishlist.productId } });
+      })
+    );
+    res.json({ wishlists, guides });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 module.exports = {
   addGuide,
   updateGuide,
   getGuide,
   getAllGuide,
   deleteGuide,
+  likeGuide,
+  wishlistGuide,
+  getAllWishlists,
 }

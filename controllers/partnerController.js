@@ -2,12 +2,16 @@ const Partner = require('../models/partnerModel');
 const asyncHandler = require('express-async-handler');
 const { generateToken } = require("../config/jwtToken");
 const { generateRefreshToken } = require("../config/refreshtoken");
+const Room = require('../models/product/roomModel');
+const Guide = require('../models/product/guideModel');
+const Attraction = require('../models/product/attractionModel');
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const path = require('path');
 const fs = require('fs');
 const cookie = require("cookie");
+const Sequelize = require('sequelize');
 
 const createPartner = asyncHandler(async (req, res) => {
     const { username, email, mobile, password, address, description } = req.body;
@@ -233,6 +237,80 @@ const updatePartner = asyncHandler(async (req, res) => {
   }
 });
 
+const searchAll = asyncHandler(async (req, res) => {
+  try {
+    const keyword = req.query.keyword;
+    const searchResults = [];
+
+    // Search in Room model
+    const roomSearchResults = await Room.findAll({
+      where: {
+        name: {
+          [Sequelize.Op.like]: `%${keyword}%`,
+        },
+      },
+      include: [
+        {
+          model: Partner,
+          attributes: ['profileImage', 'url', 'username'],
+        },
+        // {
+        //   model: Rating,
+        //   attributes: ['star', 'comment', 'userId'],
+        // },
+      ],
+    });
+    searchResults.push(...roomSearchResults);
+
+    // Search in Guide model
+    const guideSearchResults = await Guide.findAll({
+      where: {
+        name: {
+          [Sequelize.Op.like]: `%${keyword}%`,
+        },
+      },
+      include: [
+        {
+          model: Partner,
+          attributes: ['profileImage', 'url', 'username'],
+        },
+        // {
+        //   model: Rating,
+        //   attributes: ['star', 'comment', 'userId'],
+        // },
+      ],
+    });
+    searchResults.push(...guideSearchResults);
+
+    // Search in Attraction model
+    const attractionSearchResults = await Attraction.findAll({
+      where: {
+        name: {
+          [Sequelize.Op.like]: `%${keyword}%`,
+        },
+      },
+      include: [
+        {
+          model: Partner,
+          attributes: ['profileImage', 'url', 'username'],
+        },
+        // {
+        //   model: Rating,
+        //   attributes: ['star', 'comment', 'userId'],
+        // },
+      ],
+    });
+    searchResults.push(...attractionSearchResults);
+
+    res.json({
+      message: 'Hasil pencarian',
+      searchResults,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 module.exports = {
     createPartner,
     loginPartner,
@@ -241,4 +319,5 @@ module.exports = {
     updatePartner,
     chooseCategory,
     cookieCategory,
+    searchAll,
 };

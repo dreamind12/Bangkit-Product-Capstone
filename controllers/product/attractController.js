@@ -1,8 +1,10 @@
 const asyncHandler = require('express-async-handler');
-const Attraction = require('../models/attractionModel');
-const Partner = require('../models/partnerModel');
-const Rating = require('../models/ratingModel');
-const Invoice = require('../models/invoiceModel');
+const Attraction = require('../../models/product/attractionModel');
+const Partner = require('../../models/partnerModel');
+const Rating = require('../../models/payment/ratingModel');
+const Invoice = require('../../models/payment/invoiceModel');
+const Like = require('../../models/likewish/likeModel');
+const Wishlist = require('../../models/likewish/wishlistModel');
 const path = require('path');
 const fs = require('fs');
 const {Op,Sequelize} = require('sequelize');
@@ -207,10 +209,136 @@ const deleteAttraction = asyncHandler(async(req, res)=>{
   }
 });
 
+const likeAttract = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  try {
+    // Check if the user has already liked the Attraction
+    const existingLike = await Like.findOne({
+      where: {
+        userId,
+        productId: id,
+        productType: 'Attraction',
+      },
+    });
+
+    // Find the corresponding attract
+    const attract = await Attraction.findByPk(id);
+
+    if (!attract) {
+      return res.status(404).json({ message: "Attraction not found" });
+    }
+
+    if (existingLike) {
+      // User already liked the Attraction, so unlike it
+      await existingLike.destroy();
+
+      // Recalculate the total likes and update the Attraction model
+      const totalLikes = await Like.count({
+        where: {
+          productId: id,
+          productType: 'Attraction',
+        },
+      });
+
+      attract.totalLikes = totalLikes;
+      await attract.save();
+
+      res.json({
+        message: "Attraction un-liked successfully",
+        likesCount: totalLikes,
+      });
+    } else {
+      // User didn't like the Attraction, so add a like
+      await Like.create({
+        userId,
+        productId: id,
+        productType: 'Attraction',
+      });
+
+      // Recalculate the total likes and update the Attraction model
+      const totalLikes = await Like.count({
+        where: {
+          productId: id,
+          productType: 'Attraction',
+        },
+      });
+
+      attract.totalLikes = totalLikes;
+      await attract.save();
+
+      res.json({
+        message: "Attraction liked successfully",
+        likesCount: totalLikes,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+const wishlistAttraction = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  try {
+    // Check if the user has already wishlisted the Attraction
+    const existingWishlist = await Wishlist.findOne({
+      where: {
+        userId,
+        productId: id,
+        productType: 'Attraction',
+      },
+    });
+
+    // Get the attract data
+    const attract = await Attraction.findOne({ where: { id: id } });
+
+    if (existingWishlist) {
+      // User already wishlisted the Attraction, so remove it from the wishlist
+      await existingWishlist.destroy();
+      res.json({ message: "Attraction removed from wishlist", attract });
+    } else {
+      // User didn't wishlist the Attraction, so add it to the wishlist
+      await Wishlist.create({
+        userId,
+        productId: id,
+        productType: 'Attraction',
+      });
+      res.json({ message: "Attraction added to wishlist", attract });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+const getAllWishlists = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const wishlists = await Wishlist.findAll({ where: { userId } });
+    // Get the attract data for each wishlist
+    const attracts = await Promise.all(
+      wishlists.map(async (wishlist) => {
+        return await Attraction.findOne({ where: { id: wishlist.productId } });
+      })
+    );
+    res.json({ wishlists, attracts });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 module.exports = {
   addAttraction,
   updateAttraction,
   getAttraction,
   getAllAttraction,
   deleteAttraction,
+  likeAttract,
+  wishlistAttraction,
+  getAllWishlists,
 }
