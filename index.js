@@ -9,6 +9,7 @@ const partnerRouter = require('./routes/partnerRoute');
 const roomRouter = require('./routes/roomRoute');
 const guideRouter = require('./routes/guideRoute');
 const attractRouter = require('./routes/attractRoute');
+const userRoute = require('./routes/userRoute');
 const placeRouter = require('./routes/placeRoute');
 
 const app = express();
@@ -23,6 +24,7 @@ app.use('/partner', partnerRouter);
 app.use('/room', roomRouter);
 app.use('/guide', guideRouter);
 app.use('/attract', attractRouter);
+app.use('/user', userRoute);
 // app.use('/place', placeRouter);
 
 app.listen(PORT, ()=>{

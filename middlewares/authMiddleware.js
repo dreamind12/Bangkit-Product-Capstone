@@ -1,4 +1,5 @@
 const Partner = require('../models/partnerModel');
+const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
 
@@ -42,4 +43,14 @@ const isPartner = asyncHandler(async (req, res, next) => {
   }
 });
 
-module.exports = { authMiddleware, isPartner };
+const isUser = asyncHandler(async (req, res, next) => {
+  const { email } = req.user;
+  const user = await User.findOne({ where: { email } }); 
+  if (user && sellerUser.role === 'user') {
+    next();
+  } else {
+    throw new Error('You are not User');
+  }
+});
+
+module.exports = { authMiddleware, isPartner ,isUser};
