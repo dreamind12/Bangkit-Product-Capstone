@@ -5,6 +5,9 @@ const { generateRefreshToken } = require("../config/refreshtoken");
 const Room = require('../models/product/roomModel');
 const Guide = require('../models/product/guideModel');
 const Attraction = require('../models/product/attractionModel');
+const Invoice = require('../models/payment/invoiceModel');
+const Booking = require('../models/payment/bookingModel');
+const bookGuide = require('../models/payment/bookGuideModel');
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -311,6 +314,144 @@ const searchAll = asyncHandler(async (req, res) => {
   }
 });
 
+const getDetailInvoice = asyncHandler(async (req, res) => {
+  const { invoiceId } = req.params;
+  const invoice = await Invoice.findOne({ where: { invoiceId } });
+
+  if (!invoice) {
+    return res.status(404).json({ message: 'Invoice not found' });
+  }
+
+  // Find the associated room, guide, attract, and partner
+  const room = await Room.findByPk(invoice.roomId);
+  const guide = await Guide.findByPk(invoice.guideId);
+  const attract = await Attraction.findByPk(invoice.attractId);
+  const user = await Partner.findByPk(invoice.userId);
+
+  const response = {
+    invoiceId: invoice.invoiceId,
+    orderDate: invoice.orderDate,
+    paymentMethod: invoice.paymentMethod,
+    totalAmount: invoice.totalAmount,
+    status: invoice.status,
+  };
+
+  if (room) {
+    response.room = {
+      name: room.name,
+      image: room.image,
+      url: room.url,
+      duration: room.duration,
+    };
+  }
+
+  if (guide) {
+    response.guide = {
+      name: guide.name,
+      image: guide.image,
+      url: guide.url,
+      address: guide.address,
+    };
+  }
+
+  if (attract) {
+    response.attract = {
+      name: attract.name,
+      image: attract.image,
+      url: attract.url,
+      address: attract.address,
+    };
+  }
+
+  if (user) {
+    response.user = {
+      id: user.id,
+      username: user.username,
+      address: user.address,
+      profileImage: user.profileImage,
+      url: user.url,
+    };
+  }
+
+  res.json(response);
+});
+
+const getAllInvoice = asyncHandler(async (req, res) => {
+  try {
+    const invoices = await Invoice.findAll();
+
+    // Define a function to fetch related data based on id and type
+    const getRelatedData = async (id, type) => {
+      switch (type) {
+        case 'Room':
+          return await Room.findByPk(id);
+        case 'Guide':
+          return await Guide.findByPk(id);
+        case 'Attraction':
+          return await Attraction.findByPk(id);
+        default:
+          return null;
+      }
+    };
+
+    const getAllWithRelatedData = await Promise.all(
+      invoices.map(async (invoice) => {
+        const relatedData = {};
+    
+        if (invoice.roomId) {
+          const room = await Room.findByPk(invoice.roomId);
+          relatedData.Room = {
+            name: room.name,
+            image: room.image,
+            url: room.url,
+            price: room.price,
+            averageRating: room.averageRating,
+          };
+        }
+    
+        if (invoice.guideId) {
+          const guide = await Guide.findByPk(invoice.guideId);
+          relatedData.Guide = {
+            name: guide.name,
+            image: guide.image,
+            url: guide.url,
+            price: guide.price,
+            averageRating: guide.averageRating,
+          };
+        }
+    
+        if (invoice.attractId) {
+          const attract = await Attraction.findByPk(invoice.attractId);
+          relatedData.Attraction = {
+            name: attract.name,
+            image: attract.image,
+            url: attract.url,
+            price: attract.price,
+            averageRating: attract.averageRating,
+          };
+        }
+    
+        return {
+          id: invoice.id,
+          invoiceId: invoice.invoiceId,
+          orderDate: invoice.orderDate,
+          paymentMethod: invoice.paymentMethod,
+          totalAmount: invoice.totalAmount,
+          status: invoice.status,
+          ...relatedData,
+        };
+      })
+    );    
+
+    res.json({
+      message: 'Semua Invoice Berhasil Diambil',
+      getAll: getAllWithRelatedData,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 module.exports = {
     createPartner,
     loginPartner,
@@ -320,4 +461,6 @@ module.exports = {
     chooseCategory,
     cookieCategory,
     searchAll,
+    getDetailInvoice,
+    getAllInvoice,
 };

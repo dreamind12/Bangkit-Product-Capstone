@@ -1,8 +1,15 @@
 const Sequelize = require('sequelize');
 const db = require('../../config/Database');
 const Partner = require('../partnerModel');
+const Room = require('../product/roomModel');
+const Guide = require('../product/guideModel');
+const Attraction = require('../product/attractionModel');
 
 const Invoice = db.define('Invoice', {
+  invoiceId: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
   orderDate: {
     type: Sequelize.DATE,
     allowNull: false,
@@ -15,20 +22,27 @@ const Invoice = db.define('Invoice', {
     type: Sequelize.FLOAT,
     allowNull: false,
   },
+  roomId: {
+    type: Sequelize.INTEGER,
+  },
+  guideId: {
+    type: Sequelize.INTEGER,
+  },
+  attractId: {
+    type: Sequelize.INTEGER,
+  },
   userId: {
     type: Sequelize.INTEGER,
-    allowNull: false,
   },
   status: {
     type: Sequelize.STRING,
-    allowNull: false,
-  },
-  purchasedItems: {
-    type: Sequelize.JSON,
   },
 });
 
 Invoice.belongsTo(Partner, { foreignKey: 'userId' });
+Invoice.belongsTo(Room, { foreignKey: 'userId' });
+Invoice.belongsTo(Guide, { foreignKey: 'userId' });
+Invoice.belongsTo(Attraction, { foreignKey: 'userId' });
 
 module.exports = Invoice;
 
