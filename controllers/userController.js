@@ -160,9 +160,15 @@ const updateUser = asyncHandler(async (req, res) => {
         users.username = username;
         users.email = email;
         users.mobile = mobile;
-        users.password = password;
+        if (password) {
+          const saltRounds = 10;
+          const salt = await bcrypt.genSalt(saltRounds);
+          const hashedPassword = await bcrypt.hash(password, salt);
+          users.password = hashedPassword;
+        }
         users.address = address;
         users.description = description;
+        
 
         // Update gambar profileImage dan url jika ada
         if (req.files) {
