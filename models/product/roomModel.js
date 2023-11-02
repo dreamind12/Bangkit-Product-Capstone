@@ -1,6 +1,5 @@
 const Sequelize = require("sequelize");
 const Partner = require('../partnerModel');
-const Rating = require('../payment/ratingModel');
 const db = require("../../config/Database");
 
 const Room = db.define("Room", {
@@ -65,7 +64,7 @@ partnerId: {
 })
 
 Room.belongsTo(Partner, { foreignKey: 'partnerId' });
-Room.hasMany(Rating, { foreignKey: 'RoomId' });
+
 
 module.exports = Room;
 

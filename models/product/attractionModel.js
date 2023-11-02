@@ -1,6 +1,5 @@
 const Sequelize = require("sequelize");
 const Partner = require('../partnerModel');
-const Rating = require('../payment/ratingModel');
 const db = require("../../config/Database");
 
 const Attraction = db.define("Attraction", {
@@ -55,7 +54,7 @@ partnerId: {
 })
 
 Attraction.belongsTo(Partner, { foreignKey: 'partnerId' });
-Attraction.hasMany(Rating, { foreignKey: 'AttractionId' });
+
 
 module.exports = Attraction;
 

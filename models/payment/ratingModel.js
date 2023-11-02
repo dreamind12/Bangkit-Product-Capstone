@@ -14,8 +14,8 @@ const Rating = db.define('Rating', {
     type: Sequelize.INTEGER,
     allowNull: false,
   },
-  productId: {
-    type: Sequelize.INTEGER,
+  invoiceId: {
+    type: Sequelize.STRING,
     allowNull: false,
   },
 });

@@ -4,6 +4,7 @@ const Partner = require('../partnerModel');
 const Room = require('../product/roomModel');
 const Guide = require('../product/guideModel');
 const Attraction = require('../product/attractionModel');
+const Rating = require('./ratingModel');
 
 const Invoice = db.define('Invoice', {
   invoiceId: {
@@ -43,6 +44,7 @@ Invoice.belongsTo(Partner, { foreignKey: 'userId' });
 Invoice.belongsTo(Room, { foreignKey: 'userId' });
 Invoice.belongsTo(Guide, { foreignKey: 'userId' });
 Invoice.belongsTo(Attraction, { foreignKey: 'userId' });
+Invoice.hasMany(Rating, { foreignKey: 'invoiceId' });
 
 module.exports = Invoice;
 
