@@ -4,9 +4,9 @@ const { createUser, loginUser, getUser, getAllUser, updateUser } = require('../c
 
 const router = express.Router();
 
-router.post('/register-user', createUser);
-router.post('/login-user', loginUser);
-router.get('/get-user/:id', getUser);
+router.post('/register', createUser);
+router.post('/login', loginUser);
+router.get('/get/:id', getUser);
 router.get('/getAll', getAllUser);
 router.put('/update/:id', updateUser);
 
