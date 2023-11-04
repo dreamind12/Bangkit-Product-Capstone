@@ -27,6 +27,16 @@ const User = db.define(
     category: {
       type: Sequelize.STRING,
     },
+    point:{
+      type: Sequelize.INTEGER,
+      defaultValue:0,
+
+    },
+    tier :{
+      type: Sequelize.STRING,
+      defaultValue:"bronze",
+
+    },
     address: {
       type: Sequelize.STRING,
     },
@@ -86,8 +96,8 @@ module.exports = User;
   await db.sync()
 })
 
-// User.sync().then((data)=>{
-// console.log("Table Partner success create");
-// }).catch((err)=>{
-//   console.log("Table Error when create")
-// });
+User.sync().then((data)=>{
+console.log("Table users success create");
+}).catch((err)=>{
+  console.log("Table Error when create")
+});

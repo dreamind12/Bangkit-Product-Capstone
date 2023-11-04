@@ -10,7 +10,7 @@ const fs = require('fs');
 const cookie = require("cookie");
 
 const createUser = asyncHandler(async (req, res) => {
-  const { username, email, mobile, password, address, description } = req.body;
+  const { username, email, mobile, password, address,description , point , tier } = req.body;
 
   const apiKey = 'AIzaSyDW3vHQcYWxhBm9jpU6RLgptGKjXtoT-fU';
   const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
@@ -53,6 +53,7 @@ const createUser = asyncHandler(async (req, res) => {
           });
         }
       });
+
 
       const createUser = await user.create({
         username,
@@ -166,6 +167,8 @@ const updateUser = asyncHandler(async (req, res) => {
           const hashedPassword = await bcrypt.hash(password, salt);
           users.password = hashedPassword;
         }
+        // users.tier = tier;
+        // users.point = point;
         users.address = address;
         users.description = description;
         
