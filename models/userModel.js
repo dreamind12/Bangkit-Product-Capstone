@@ -24,7 +24,7 @@ const User = db.define(
       type: Sequelize.STRING,
       allowNull: false,
     },
-    category: {
+    preference: {
       type: Sequelize.STRING,
     },
     point:{

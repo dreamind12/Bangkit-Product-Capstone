@@ -209,10 +209,38 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 });
 
+const choosePreference = asyncHandler(async (req, res) => {
+  const { preference } = req.body;
+  const user = await users.findOne({
+    where: {
+      id: req.user.id,
+    },
+  });
+  users.preference = preference;
+  await users.save();
+  // Set cookie has_chosen_preference
+  res.cookie("has_chosen_preference", "true", {
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 hari
+  });
+  res.json({
+    user
+  });
+});
+
+const cookiePreference = asyncHandler(async (req, res) => {
+  const hasChosenPreference = req.cookies.has_chosen_preference === "true";
+  if (!hasChosenPreference) {
+    // Tampilkan form untuk memilih Preference
+    return res.render("partners/choose-preference");
+  }
+});
+
 module.exports = {
   createUser,
   loginUser,
   getUser,
   getAllUser,
   updateUser,
+  choosePreference,
+  cookiePreference,
 }
