@@ -5,7 +5,6 @@ const asyncHandler = require('express-async-handler');
 
 const authMiddleware = asyncHandler(async (req, res, next) => {
   let token;
-  
   if (req?.headers?.authorization?.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
     try {
@@ -13,14 +12,18 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         console.log('Decoded Token:', decoded);
 
-        const user = await Partner.findByPk(decoded?.id); 
-        console.log('Found User:', user);
-
+        const user = await User.findByPk(decoded?.id);
         if (user) {
           req.user = user;
           next();
         } else {
-          throw new Error('User not found');
+          const partner = await Partner.findByPk(decoded?.id);
+          if (partner) {
+            req.user = partner;
+            next();
+          } else {
+            throw new Error('User or partner not found');
+          }
         }
       }
     } catch (error) {
@@ -31,7 +34,6 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
     throw new Error('There is no token attached');
   }
 });
-
 
 const isPartner = asyncHandler(async (req, res, next) => {
   const { email } = req.user;

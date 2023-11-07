@@ -62,6 +62,9 @@ const paymentAttract = asyncHandler(async (req, res) => {
   try {
       // Check if booking exists
       const booking = await Bookattract.findByPk(id);
+      if (booking.userId !== req.user.id) {
+        return res.status(403).json({ message: 'You are not authorized to pay for this booking' });
+      }
       if (!booking) {
           return res.status(404).json({ message: 'Bookattract not found' });
       }

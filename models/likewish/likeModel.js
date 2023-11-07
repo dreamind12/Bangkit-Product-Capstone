@@ -8,11 +8,13 @@ const Like = db.define("Like", {
   },
   productId: {
     type: Sequelize.INTEGER,
-    allowNull: false,
   },
   productType: {
     type: Sequelize.STRING,
     allowNull: false,
+  },
+  postId: {
+    type: Sequelize.STRING,
   },
 });
 

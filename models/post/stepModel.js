@@ -1,13 +1,26 @@
 const Sequelize = require('sequelize');
-const db = require('../config/Database');
+const db = require('../../config/Database');
+const Post = require('./postModel');
 
-const Place = db.define('Place', {
-  name: {
+const Step = db.define('Step', {
+  postId: {
+    type: Sequelize.STRING,
+  },
+  judul: {
     type: Sequelize.STRING,
     allowNull: false,
   },
   description: {
     type: Sequelize.TEXT,
+  },
+  image:{
+    type: Sequelize.STRING,
+  },
+  url:{
+    type: Sequelize.STRING,
+  },
+  address: {
+    type: Sequelize.STRING,
   },
   latitude: {
     type: Sequelize.FLOAT,
@@ -15,16 +28,15 @@ const Place = db.define('Place', {
   longitude: {
     type: Sequelize.FLOAT,
   },
-  // Anda dapat menambahkan lebih banyak kolom sesuai kebutuhan
 });
 
-module.exports = Place;
+module.exports = Step;
 
 (async () => {
   await db.sync()
 })
 
-// Place.sync().then((data)=>{
+// Step.sync().then((data)=>{
 //   console.log("Table success create");
 //   }).catch((err)=>{
 //     console.log("Table Error when create")

@@ -7,7 +7,7 @@ const asyncHandler = require('express-async-handler');
 const addBooking = asyncHandler(async (req, res) => {
     const { id } = req.user;
     const roomId = req.params.roomId;
-    const duration = req.body;
+    const duration = parseInt(req.body.duration);
     try {
         const date = new Date(req.body.checkInDate);
         const checkInDate = date.toISOString().split('T')[0];
@@ -66,6 +66,9 @@ const paymentRoom = asyncHandler(async (req, res) => {
     try {
         // Check if booking exists
         const booking = await Booking.findByPk(bookingId);
+        if (booking.userId !== req.user.id) {
+            return res.status(403).json({ message: 'You are not authorized to pay for this booking' });
+          }
         if (!booking) {
             return res.status(404).json({ message: 'Booking not found' });
         }
@@ -91,6 +94,8 @@ const paymentRoom = asyncHandler(async (req, res) => {
             totalAmount: totalAmount,
             status: 'paid',
         });
+        // Delete the booking
+        await booking.destroy();
         res.json({
             message: 'Payment processed successfully',
             invoiceId: invoice,
