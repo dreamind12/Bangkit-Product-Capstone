@@ -1,12 +1,13 @@
 const express = require('express');
 const { createUser, loginUser, getUser, getAllUser, updateUser, choosePreference, addRating, getDetailInvoice, getAllInvoice, searchAll, getAllWishlists } = require('../controllers/userController');
 const { authMiddleware, isUser } = require('../middlewares/authMiddleware');
-const { createPost, createStep, getPost, getStep, getPostWithSteps, likePost, wishlistPost } = require('../controllers/posts/postController');
+const { createPost, createStep, getPost, getStep, getPostWithSteps, likePost, wishlistPost, updatePost } = require('../controllers/posts/postController');
 const router = express.Router();
 
 router.post('/register', createUser);
 router.post('/login', loginUser);
 router.post('/post', authMiddleware, createPost);
+router.post('/update-post', authMiddleware, updatePost);
 router.post('/post/step/:postId', authMiddleware, createStep);
 router.post('/addRating', authMiddleware, addRating);
 router.post('/like/:postId', authMiddleware, likePost);
