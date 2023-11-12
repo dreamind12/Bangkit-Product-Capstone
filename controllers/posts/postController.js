@@ -343,9 +343,9 @@ const updatePost = asyncHandler(async (req, res) => {
           }
         }
         await postToUpdate.save();
-        res.json({ message: 'Post data updated successfully', user: userToUpdate });
+        res.json({ message: 'Post data updated successfully', post: postToUpdate });
       } else {
-        res.status(404).json({ message: 'User not found' });
+        res.status(404).json({ message: 'Post not found' });
       }
     } else {
       res.status(400).json({ message: 'Invalid address or geocoding error' });
@@ -356,6 +356,28 @@ const updatePost = asyncHandler(async (req, res) => {
   }
 });
 
+const deletePost = asyncHandler(async(req, res)=>{
+  const Post = await post.findOne({
+      where:{
+          id : req.params.id
+      }
+  });
+  if(!Post) return res.status(404).json({msg: "No Data Found"});
+
+  try {
+      const filepath = `./public/images/${post.image}`;
+      fs.unlinkSync(filepath);
+      await post.destroy({
+          where:{
+              id : req.params.id
+          }
+      });
+      res.status(200).json({msg: "Post Deleted Successfuly"});
+  } catch (error) {
+      console.log(error.message);
+  }
+});
+
 module.exports = {
     createPost,
     createStep,
@@ -363,4 +385,5 @@ module.exports = {
     likePost,
     wishlistPost,
     updatePost,
+    deletePost,
 }
