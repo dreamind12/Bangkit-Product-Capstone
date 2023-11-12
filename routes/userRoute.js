@@ -1,7 +1,7 @@
 const express = require('express');
 const { createUser, loginUser, getUser, getAllUser, updateUser, choosePreference, addRating, getDetailInvoice, getAllInvoice, searchAll, getAllWishlists } = require('../controllers/userController');
 const { authMiddleware, isUser } = require('../middlewares/authMiddleware');
-const { createPost, createStep, getPost, getStep, getPostWithSteps, likePost, wishlistPost, updatePost } = require('../controllers/posts/postController');
+const { createPost, createStep, getPost, getStep, getPostWithSteps, likePost, wishlistPost, updatePost ,deletePost } = require('../controllers/posts/postController');
 const router = express.Router();
 
 router.post('/register', createUser);
@@ -21,5 +21,6 @@ router.get('/getPost/:postId', getPost);
 router.get('/search', authMiddleware, searchAll);
 router.put('/update/:id', authMiddleware, updateUser);
 router.post('/choose-preference', authMiddleware, choosePreference);
+router.delete('/delete-post', authMiddleware, deletePost);
 
 module.exports = router;
