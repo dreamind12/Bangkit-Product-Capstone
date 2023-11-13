@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/dreamind12/Bangkit-Product-Capstone#readme",
   "dependencies": {
+    "@google-cloud/vision": "^4.0.2",
     "@googlemaps/google-maps-services-js": "^3.3.41",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
@@ -30,9 +31,12 @@
     "express-async-handler": "^1.2.0",
     "express-fileupload": "^1.4.1",
     "google-auth-library": "^9.1.0",
+    "googleapis": "^128.0.0",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.6.2",
+    "node-fetch": "^3.3.2",
     "nodemon": "^3.0.1",
+    "request": "^2.88.2",
     "sequelize": "^6.33.0"
   }
 }

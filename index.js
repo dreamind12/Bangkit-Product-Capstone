@@ -10,6 +10,7 @@ const roomRouter = require('./routes/roomRoute');
 const guideRouter = require('./routes/guideRoute');
 const attractRouter = require('./routes/attractRoute');
 const userRoute = require('./routes/userRoute');
+const imageRoute = require('./routes/imageRoute');
 
 const app = express();
 app.use(cors());
@@ -24,6 +25,7 @@ app.use('/room', roomRouter);
 app.use('/guide', guideRouter);
 app.use('/attract', attractRouter);
 app.use('/user', userRoute);
+app.use('/image', imageRoute);
 
 app.listen(PORT, ()=>{
     console.log(`Server Listening on ${PORT}`);
