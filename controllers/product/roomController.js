@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Room = require('../../models/product/roomModel');
 const Partner = require('../../models/partnerModel');
+const User = require('../../models/userModel');
 const Rating = require('../../models/payment/ratingModel');
 const Invoice = require('../../models/payment/invoiceModel');
 const Like = require('../../models/likewish/likeModel');
@@ -135,28 +136,49 @@ const updateRoom = asyncHandler(async(req, res) => {
 });
 
 const getRoom = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    try {
-      const data = await Room.findOne({
-        where: { id },
-        include: [
-          {
-            model: Partner,
-            attributes: ['profileImage', 'url', 'username'],
-          },
-        ],
-      });
-      if (!data) {
-        return res.status(404).json({ message: 'Room not found' });
-      }  
-      res.json({
-        message: 'Room berhasil diambil',
-        data,
-      });
-    } catch (error) {
-      throw new Error(error);
+  const { id } = req.params;
+
+  try {
+    const data = await Room.findOne({
+      where: { id },
+      include: [
+        {
+          model: Partner,
+          attributes: ['profileImage', 'url', 'username'],
+        },
+      ],
+    });
+
+    if (!data) {
+      return res.status(404).json({ message: 'Room not found' });
     }
-});  
+
+    const invoiceIds = await Invoice.findAll({
+      where: { roomId: id },
+      attributes: ['invoiceId'],
+    });
+
+    const invoiceIdList = invoiceIds.map((invoice) => invoice.invoiceId);
+
+    const ratings = await Rating.findAll({
+      where: { invoiceId: invoiceIdList },
+      include: [
+        {
+          model: User,
+          attributes: ['username', 'profileImage', 'url'],
+        },
+      ],
+    });
+
+    res.json({
+      message: 'Room details and ratings retrieved successfully',
+      data,
+      ratings,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching room and ratings', error: error.message });
+  }
+});
 
 const getAllRoom = asyncHandler(async (req, res) => {
   try {
@@ -305,34 +327,6 @@ const wishlistRoom = asyncHandler(async (req, res) => {
   }
 });
 
-const getAllWishlists = asyncHandler(async (req, res) => {
-  const userId = req.user.id;
-  try {
-    const wishlists = await Wishlist.findAll({ where: { userId } });
-    // Get the room data for each wishlist
-    const rooms = await Promise.all(
-      wishlists.map(async (wishlist) => {
-        return await Room.findOne({ where: { id: wishlist.productId } });
-      })
-    );
-    res.json({ wishlists, rooms });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
-const getAllInvoices = asyncHandler(async (req, res) => {
-  const invoices = await Invoice.findAll({
-    include: Room,
-  });
-
-  res.json({
-    message: 'Invoices retrieved successfully',
-    invoices,
-  });
-});
-
 module.exports = {
   addRoom,
   updateRoom,
@@ -341,6 +335,4 @@ module.exports = {
   deleteRoom,
   likeRoom,
   wishlistRoom,
-  getAllWishlists,
-  getAllInvoices,
 }

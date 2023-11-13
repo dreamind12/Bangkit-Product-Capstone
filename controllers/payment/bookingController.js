@@ -1,7 +1,6 @@
 const Booking = require('../../models/payment/bookingModel');
 const Room = require('../../models/product/roomModel');
 const Invoice = require('../../models/payment/invoiceModel');
-const Partner = require('../../models/partnerModel');
 const asyncHandler = require('express-async-handler');
 
 const addBooking = asyncHandler(async (req, res) => {
@@ -31,35 +30,6 @@ const addBooking = asyncHandler(async (req, res) => {
     }
 });
 
-const getBooking = asyncHandler(async (req, res) => {
-    const cartItems = await Booking.findAll({
-        where: {
-            userId,
-        },
-        include: [{
-            model: Booking,
-            as: 'booking',
-        }],
-    });
-
-    return cartItems;
-});
-
-const removeBooking = asyncHandler(async (req, res) => {
-    const cartItem = await Booking.findOne({
-        where: {
-            productId: bookingId,
-        },
-    });
-    res.status(200).json({ message: "Booking telah terhapus" })
-
-    if (!cartItem) {
-        throw new Error('Booking not found in cart');
-    }
-
-    await cartItem.destroy();
-});
-
 const paymentRoom = asyncHandler(async (req, res) => {
     const { bookingId } = req.params;
     const { paymentMethod } = req.body;
@@ -72,7 +42,7 @@ const paymentRoom = asyncHandler(async (req, res) => {
         if (!booking) {
             return res.status(404).json({ message: 'Booking not found' });
         }
-        if (paymentMethod !== 'bayar_di_tempat') {
+        if (paymentMethod !== 'bayar di tempat') {
             return res.status(400).json({ message: 'Invalid payment method' });
         }
         function generateInvoiceId() {
@@ -108,7 +78,5 @@ const paymentRoom = asyncHandler(async (req, res) => {
 
 module.exports = {
     addBooking,
-    getBooking,
-    removeBooking,
     paymentRoom,
 }

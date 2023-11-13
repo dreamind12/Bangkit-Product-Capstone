@@ -1,6 +1,6 @@
 const Sequelize = require("sequelize");
 const db = require('../../config/Database');
-const Partner = require('../partnerModel');
+const User = require('../userModel');
 const Guide = require('../product/guideModel');
 
 const Bookguide = db.define("Bookguide", {
@@ -30,7 +30,7 @@ const Bookguide = db.define("Bookguide", {
     },
 });
 
-Bookguide.belongsTo(Partner, { foreignKey: 'userId' });
+Bookguide.belongsTo(User, { foreignKey: 'userId' });
 Bookguide.belongsTo(Guide, { foreignKey: 'guideId' });
 
 Bookguide.addHook('beforeValidate', (booking, options) => {

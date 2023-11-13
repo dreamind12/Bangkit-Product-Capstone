@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Guide = require('../../models/product/guideModel');
 const Partner = require('../../models/partnerModel');
+const User = require('../../models/userModel');
 const Rating = require('../../models/payment/ratingModel');
 const Invoice = require('../../models/payment/invoiceModel');
 const Like = require('../../models/likewish/likeModel');
@@ -188,10 +189,27 @@ const getGuide = asyncHandler(async (req, res) => {
       });
       if (!data) {
         return res.status(404).json({ message: 'Guide not found' });
-      }  
+      }
+      const invoiceIds = await Invoice.findAll({
+        where: { guideId: id },
+        attributes: ['invoiceId'],
+      });
+  
+      const invoiceIdList = invoiceIds.map((invoice) => invoice.invoiceId);
+  
+      const ratings = await Rating.findAll({
+        where: { invoiceId: invoiceIdList },
+        include: [
+          {
+            model: User,
+            attributes: ['username', 'profileImage', 'url'],
+          },
+        ],
+      });  
       res.json({
         message: 'Guide berhasil diambil',
         data,
+        ratings,
       });
     } catch (error) {
       throw new Error(error);
@@ -345,23 +363,6 @@ const wishlistGuide = asyncHandler(async (req, res) => {
   }
 });
 
-const getAllWishlists = asyncHandler(async (req, res) => {
-  const userId = req.user.id;
-  try {
-    const wishlists = await Wishlist.findAll({ where: { userId } });
-    // Get the guide data for each wishlist
-    const guides = await Promise.all(
-      wishlists.map(async (wishlist) => {
-        return await Guide.findOne({ where: { id: wishlist.productId } });
-      })
-    );
-    res.json({ wishlists, guides });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
 module.exports = {
   addGuide,
   updateGuide,
@@ -370,5 +371,4 @@ module.exports = {
   deleteGuide,
   likeGuide,
   wishlistGuide,
-  getAllWishlists,
 }

@@ -1,6 +1,6 @@
 const Sequelize = require("sequelize");
 const db = require('../../config/Database');
-const Partner = require('../partnerModel');
+const User = require('../userModel');
 const Room = require('../product/roomModel');
 
 const Booking = db.define("Booking", {
@@ -34,7 +34,7 @@ const Booking = db.define("Booking", {
     },
 });
 
-Booking.belongsTo(Partner, { foreignKey: 'userId' });
+Booking.belongsTo(User, { foreignKey: 'userId' });
 Booking.belongsTo(Room, { foreignKey: 'roomId' });
 
 Booking.prototype.calculateDuration = function() {

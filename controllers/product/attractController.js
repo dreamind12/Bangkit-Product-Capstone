@@ -1,13 +1,13 @@
 const asyncHandler = require('express-async-handler');
 const Attraction = require('../../models/product/attractionModel');
 const Partner = require('../../models/partnerModel');
+const User = require('../../models/userModel');
 const Rating = require('../../models/payment/ratingModel');
 const Invoice = require('../../models/payment/invoiceModel');
 const Like = require('../../models/likewish/likeModel');
 const Wishlist = require('../../models/likewish/wishlistModel');
 const path = require('path');
 const fs = require('fs');
-const {Op,Sequelize} = require('sequelize');
 
 const addAttraction = asyncHandler(async (req, res) => {
   const userId = req.user.id;
@@ -158,10 +158,27 @@ const getAttraction = asyncHandler(async (req, res) => {
       });
       if (!data) {
         return res.status(404).json({ message: 'Attraction not found' });
-      }  
+      }
+      const invoiceIds = await Invoice.findAll({
+        where: { attractId: id },
+        attributes: ['invoiceId'],
+      });
+  
+      const invoiceIdList = invoiceIds.map((invoice) => invoice.invoiceId);
+  
+      const ratings = await Rating.findAll({
+        where: { invoiceId: invoiceIdList },
+        include: [
+          {
+            model: User,
+            attributes: ['username', 'profileImage', 'url'],
+          },
+        ],
+      });  
       res.json({
         message: 'Attraction berhasil diambil',
         data,
+        ratings,
       });
     } catch (error) {
       throw new Error(error);
@@ -315,23 +332,6 @@ const wishlistAttraction = asyncHandler(async (req, res) => {
   }
 });
 
-const getAllWishlists = asyncHandler(async (req, res) => {
-  const userId = req.user.id;
-  try {
-    const wishlists = await Wishlist.findAll({ where: { userId } });
-    // Get the attract data for each wishlist
-    const attracts = await Promise.all(
-      wishlists.map(async (wishlist) => {
-        return await Attraction.findOne({ where: { id: wishlist.productId } });
-      })
-    );
-    res.json({ wishlists, attracts });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
 module.exports = {
   addAttraction,
   updateAttraction,
@@ -340,5 +340,4 @@ module.exports = {
   deleteAttraction,
   likeAttract,
   wishlistAttraction,
-  getAllWishlists,
 }

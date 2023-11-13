@@ -1,5 +1,7 @@
 const Sequelize = require('sequelize');
 const db = require('../../config/Database');
+const User = require('../userModel');
+const Partner = require('../partnerModel');
 
 const Rating = db.define('Rating', {
   star: {
@@ -19,6 +21,9 @@ const Rating = db.define('Rating', {
     allowNull: false,
   },
 });
+
+Rating.belongsTo(User, { foreignKey: 'userId' });
+Rating.belongsTo(Partner, { foreignKey: 'userId' });
 
 module.exports = Rating;
 

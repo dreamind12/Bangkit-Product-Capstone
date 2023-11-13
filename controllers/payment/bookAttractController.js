@@ -26,35 +26,6 @@ const addBookingAttract = async (req, res) => {
       return res.status(500).json({ error: error.message });
     }
 };
-  
-const getBookingAttract = asyncHandler(async(req,res)=>{
-    const cartItems = await Cart.findAll({
-        where: {
-            userId,
-        },
-        include: [{
-            model: Booking,
-            as: 'booking',
-        }],
-    });
-
-    return cartItems;
-});
-
-const removeBookingAttract = asyncHandler(async(req,res)=>{
-    const cartItem = await Cart.findOne({
-        where: {
-            productId: bookingId,
-        },
-    });
-    res.status(200).json({message:"Booking telah terhapus"})
-
-    if (!cartItem) {
-        throw new Error('Booking not found in cart');
-    }
-
-    await cartItem.destroy();
-});
 
 const paymentAttract = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -68,7 +39,7 @@ const paymentAttract = asyncHandler(async (req, res) => {
       if (!booking) {
           return res.status(404).json({ message: 'Bookattract not found' });
       }
-      if (paymentMethod !== 'bayar_di_tempat') {
+      if (paymentMethod !== 'bayar di tempat') {
           return res.status(400).json({ message: 'Invalid payment method' });
       }
       function generateInvoiceId() {
@@ -90,6 +61,7 @@ const paymentAttract = asyncHandler(async (req, res) => {
           totalAmount: totalAmount,
           status: 'paid',
       });
+      await booking.destroy();
       res.json({
           message: 'Payment processed successfully',
           invoiceId: invoice,
@@ -102,7 +74,5 @@ const paymentAttract = asyncHandler(async (req, res) => {
 
 module.exports = {
     addBookingAttract,
-    getBookingAttract,
-    removeBookingAttract,
     paymentAttract,
 }
