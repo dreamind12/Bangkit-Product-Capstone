@@ -399,12 +399,12 @@ const updatePost = asyncHandler(async (req, res) => {
           const allowedType = ['.png', '.jpg', '.jpeg'];
 
           if (allowedType.includes(ext.toLowerCase()) && fileSize <= 5000000) {
-            const filepath = `./public/profiles/${postToUpdate.coverImage}`;
+            const filepath = `./public/images/${postToUpdate.coverImage}`;
             if (postToUpdate.coverImage && postToUpdate.coverImage !== "null") {
             fs.unlinkSync(filepath);
             }
 
-            file.mv(`./public/profiles/${fileName}`, (err) => {
+            file.mv(`./public/images/${fileName}`, (err) => {
               if (err) return res.status(500).json({ message: err.message });
             });
 
@@ -418,8 +418,6 @@ const updatePost = asyncHandler(async (req, res) => {
       } else {
         res.status(404).json({ message: 'Post not found' });
       }
-    } else {
-      res.status(400).json({ message: 'Invalid address or geocoding error' });
     }
   } catch (error) {
     console.error('Geocoding error:', error);
@@ -428,7 +426,7 @@ const updatePost = asyncHandler(async (req, res) => {
 });
 
 const deletePost = asyncHandler(async(req, res)=>{
-  const Post = await post.findOne({
+  const Post = await Post.findOne({
       where:{
           id : req.params.id
       }
@@ -436,7 +434,7 @@ const deletePost = asyncHandler(async(req, res)=>{
   if(!Post) return res.status(404).json({msg: "No Data Found"});
 
   try {
-      const filepath = `./public/images/${post.image}`;
+      const filepath = `./public/images/${Post.image}`;
       fs.unlinkSync(filepath);
       await post.destroy({
           where:{

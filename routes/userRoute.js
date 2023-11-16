@@ -21,6 +21,6 @@ router.get('/getPost/:postId', getPost);
 router.get('/search', authMiddleware, searchAll);
 router.put('/update/:id', authMiddleware, updateUser);
 router.post('/choose-preference', authMiddleware, choosePreference);
-router.delete('/delete-post', authMiddleware, deletePost);
+router.delete('/delete-post/:id', authMiddleware, deletePost);
 
 module.exports = router;
