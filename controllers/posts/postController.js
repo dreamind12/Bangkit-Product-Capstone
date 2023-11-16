@@ -426,12 +426,12 @@ const updatePost = asyncHandler(async (req, res) => {
 });
 
 const deletePost = asyncHandler(async(req, res)=>{
-  const Post = await Post.findOne({
+  const post = await Post.findOne({
       where:{
           id : req.params.id
       }
   });
-  if(!Post) return res.status(404).json({msg: "No Data Found"});
+  if(!post) return res.status(404).json({msg: "No Data Found"});
 
   try {
       const filepath = `./public/images/${Post.image}`;
