@@ -161,6 +161,93 @@ const createStep = asyncHandler(async (req, res) => {
     res.status(200).send(step);
 });
 
+const updateStep = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { judul, description, address } = req.body;
+
+  const apiKey = 'AIzaSyDW3vHQcYWxhBm9jpU6RLgptGKjXtoT-fU';
+  const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
+
+  try {
+    const response = await fetch(geocodingUrl);
+    const data = await response.json();
+
+    if (data.status === 'OK' && data.results.length > 0) {
+      const location = data.results[0].geometry.location;
+      const latitude = location.lat;
+      const longitude = location.lng;
+
+      // Simpan latitude dan longitude dalam model User
+      const stepToUpdate = await step.findByPk(id);
+      if (stepToUpdate) {
+        // Update hanya jika data diberikan dalam permintaan
+        if (judul) stepToUpdate.judul = username;
+        if (description) stepToUpdate.description = description;
+        if (address) {
+          stepToUpdate.address = address;
+          stepToUpdate.latitude = latitude;
+          stepToUpdate.longitude = longitude;
+        }
+
+        // Update gambar dan url jika ada
+        if (req.files) {
+          const file = req.files.file;
+          const fileSize = file.data.length;
+          const ext = path.extname(file.name);
+          const fileName = file.md5 + ext;
+          const allowedType = ['.png', '.jpg', '.jpeg'];
+
+          if (allowedType.includes(ext.toLowerCase()) && fileSize <= 5000000) {
+            const filepath = `./public/profiles/${stepToUpdate.coverImage}`;
+            if (stepToUpdate.coverImage && stepToUpdate.coverImage !== "null") {
+            fs.unlinkSync(filepath);
+            }
+
+            file.mv(`./public/profiles/${fileName}`, (err) => {
+              if (err) return res.status(500).json({ message: err.message });
+            });
+
+            const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
+            stepToUpdate.coverImage = fileName;
+            stepToUpdate.url = url;
+          }
+        }
+        await stepToUpdate.save();
+        res.json({ message: 'step data updated successfully', post: stepToUpdate });
+      } else {
+        res.status(404).json({ message: 'step not found' });
+      }
+    } else {
+      res.status(400).json({ message: 'Invalid address or geocoding error' });
+    }
+  } catch (error) {
+    console.error('Geocoding error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+const deleteStep = asyncHandler(async(req, res)=>{
+  const Step = await step.findOne({
+      where:{
+          id : req.params.id
+      }
+  });
+  if(!Step) return res.status(404).json({msg: "No Data Found"});
+
+  try {
+      const filepath = `./public/images/${step.image}`;
+      fs.unlinkSync(filepath);
+      await step.destroy({
+          where:{
+              id : req.params.id
+          }
+      });
+      res.status(200).json({msg: "Post Deleted Successfuly"});
+  } catch (error) {
+      console.log(error.message);
+  }
+});
+
 const getPost = asyncHandler(async (req, res) => {
   const postId = req.params.postId;
   try {
@@ -292,7 +379,7 @@ const wishlistPost = asyncHandler(async (req, res) => {
 
 const updatePost = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { judul, description, address, category } = req.body;
+  const { judul, description, address } = req.body;
 
   const apiKey = 'AIzaSyDW3vHQcYWxhBm9jpU6RLgptGKjXtoT-fU';
   const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
@@ -312,14 +399,13 @@ const updatePost = asyncHandler(async (req, res) => {
         // Update hanya jika data diberikan dalam permintaan
         if (judul) postToUpdate.judul = username;
         if (description) postToUpdate.description = description;
-        if (category) postToUpdate.category = category;
         if (address) {
           postToUpdate.address = address;
           postToUpdate.latitude = latitude;
           postToUpdate.longitude = longitude;
         }
 
-        // Update gambar profileImage dan url jika ada
+        // Update gambar dan url jika ada
         if (req.files) {
           const file = req.files.file;
           const fileSize = file.data.length;
@@ -328,7 +414,7 @@ const updatePost = asyncHandler(async (req, res) => {
           const allowedType = ['.png', '.jpg', '.jpeg'];
 
           if (allowedType.includes(ext.toLowerCase()) && fileSize <= 5000000) {
-            const filepath = `./public/profiles/${userToUpdate.coverImage}`;
+            const filepath = `./public/profiles/${postToUpdate.coverImage}`;
             if (postToUpdate.coverImage && postToUpdate.coverImage !== "null") {
             fs.unlinkSync(filepath);
             }
@@ -337,7 +423,7 @@ const updatePost = asyncHandler(async (req, res) => {
               if (err) return res.status(500).json({ message: err.message });
             });
 
-            const url = `${req.protocol}://${req.get("host")}/profiles/${fileName}`;
+            const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
             postToUpdate.coverImage = fileName;
             postToUpdate.url = url;
           }
@@ -381,6 +467,8 @@ const deletePost = asyncHandler(async(req, res)=>{
 module.exports = {
     createPost,
     createStep,
+    updateStep,
+    deleteStep,
     getPost,
     likePost,
     wishlistPost,
