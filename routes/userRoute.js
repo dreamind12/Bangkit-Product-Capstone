@@ -7,7 +7,7 @@ const router = express.Router();
 router.post('/register', createUser);
 router.post('/login', loginUser);
 router.post('/post', authMiddleware, createPost);
-router.post('/update-post', authMiddleware, updatePost);
+router.put('/update-post/:id', authMiddleware, updatePost);
 router.post('/post/step/:postId', authMiddleware, createStep);
 router.post('/addRating', authMiddleware, addRating);
 router.post('/like/:postId', authMiddleware, likePost);

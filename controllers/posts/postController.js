@@ -379,31 +379,16 @@ const wishlistPost = asyncHandler(async (req, res) => {
 
 const updatePost = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { judul, description, address } = req.body;
-
-  const apiKey = 'AIzaSyDW3vHQcYWxhBm9jpU6RLgptGKjXtoT-fU';
-  const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
-
+  const { judul, description, category } = req.body;
   try {
-    const response = await fetch(geocodingUrl);
-    const data = await response.json();
-
-    if (data.status === 'OK' && data.results.length > 0) {
-      const location = data.results[0].geometry.location;
-      const latitude = location.lat;
-      const longitude = location.lng;
 
       // Simpan latitude dan longitude dalam model User
-      const postToUpdate = await post.findByPk(id);
+      const postToUpdate = await Post.findByPk(id);
       if (postToUpdate) {
         // Update hanya jika data diberikan dalam permintaan
-        if (judul) postToUpdate.judul = username;
+        if (judul) postToUpdate.judul = judul;
         if (description) postToUpdate.description = description;
-        if (address) {
-          postToUpdate.address = address;
-          postToUpdate.latitude = latitude;
-          postToUpdate.longitude = longitude;
-        }
+        if (category) postToUpdate.category = category;
 
         // Update gambar dan url jika ada
         if (req.files) {
@@ -426,7 +411,7 @@ const updatePost = asyncHandler(async (req, res) => {
             const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
             postToUpdate.coverImage = fileName;
             postToUpdate.url = url;
-          }
+          
         }
         await postToUpdate.save();
         res.json({ message: 'Post data updated successfully', post: postToUpdate });
