@@ -178,10 +178,10 @@ const updateStep = asyncHandler(async (req, res) => {
       const longitude = location.lng;
 
       // Simpan latitude dan longitude dalam model User
-      const stepToUpdate = await step.findByPk(id);
+      const stepToUpdate = await Step.findByPk(id);
       if (stepToUpdate) {
         // Update hanya jika data diberikan dalam permintaan
-        if (judul) stepToUpdate.judul = username;
+        if (judul) stepToUpdate.judul = judul;
         if (description) stepToUpdate.description = description;
         if (address) {
           stepToUpdate.address = address;
@@ -198,12 +198,12 @@ const updateStep = asyncHandler(async (req, res) => {
           const allowedType = ['.png', '.jpg', '.jpeg'];
 
           if (allowedType.includes(ext.toLowerCase()) && fileSize <= 5000000) {
-            const filepath = `./public/profiles/${stepToUpdate.coverImage}`;
+            const filepath = `./public/images/${stepToUpdate.coverImage}`;
             if (stepToUpdate.coverImage && stepToUpdate.coverImage !== "null") {
             fs.unlinkSync(filepath);
             }
 
-            file.mv(`./public/profiles/${fileName}`, (err) => {
+            file.mv(`./public/images/${fileName}`, (err) => {
               if (err) return res.status(500).json({ message: err.message });
             });
 
@@ -227,7 +227,7 @@ const updateStep = asyncHandler(async (req, res) => {
 });
 
 const deleteStep = asyncHandler(async(req, res)=>{
-  const Step = await step.findOne({
+  const Step = await Step.findOne({
       where:{
           id : req.params.id
       }
@@ -235,14 +235,14 @@ const deleteStep = asyncHandler(async(req, res)=>{
   if(!Step) return res.status(404).json({msg: "No Data Found"});
 
   try {
-      const filepath = `./public/images/${step.image}`;
+      const filepath = `./public/images/${Step.image}`;
       fs.unlinkSync(filepath);
       await step.destroy({
           where:{
               id : req.params.id
           }
       });
-      res.status(200).json({msg: "Post Deleted Successfuly"});
+      res.status(200).json({msg: "Step Deleted Successfuly"});
   } catch (error) {
       console.log(error.message);
   }
