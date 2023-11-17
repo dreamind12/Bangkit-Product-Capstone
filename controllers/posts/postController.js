@@ -162,7 +162,7 @@ const createStep = asyncHandler(async (req, res) => {
 });
 
 const updateStep = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const { postId } = req.params;
   const { judul, description, address } = req.body;
 
   const apiKey = 'AIzaSyDW3vHQcYWxhBm9jpU6RLgptGKjXtoT-fU';
@@ -178,7 +178,7 @@ const updateStep = asyncHandler(async (req, res) => {
       const longitude = location.lng;
 
       // Simpan latitude dan longitude dalam model User
-      const stepToUpdate = await Step.findByPk(id);
+      const stepToUpdate = await Step.findByPk(postId);
       if (stepToUpdate) {
         // Update hanya jika data diberikan dalam permintaan
         if (judul) stepToUpdate.judul = judul;
@@ -378,12 +378,12 @@ const wishlistPost = asyncHandler(async (req, res) => {
 });
 
 const updatePost = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const { postId } = req.params;
   const { judul, description, category } = req.body;
   try {
 
       // Simpan latitude dan longitude dalam model User
-      const postToUpdate = await Post.findByPk(id);
+      const postToUpdate = await Post.findByPk(postId);
       if (postToUpdate) {
         // Update hanya jika data diberikan dalam permintaan
         if (judul) postToUpdate.judul = judul;
@@ -428,7 +428,7 @@ const updatePost = asyncHandler(async (req, res) => {
 const deletePost = asyncHandler(async(req, res)=>{
   const post = await Post.findOne({
       where:{
-          id : req.params.id
+          postid : req.params.postid
       }
   });
   if(!post) return res.status(404).json({msg: "No Data Found"});

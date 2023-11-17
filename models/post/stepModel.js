@@ -36,8 +36,8 @@ module.exports = Step;
   await db.sync()
 })
 
-Step.sync().then((data)=>{
-  console.log("Table success create");
-  }).catch((err)=>{
-    console.log("Table Error when create")
-  });
+// Step.sync().then((data)=>{
+//   console.log("Table success create");
+//   }).catch((err)=>{
+//     console.log("Table Error when create")
+//   });
