@@ -1,10 +1,10 @@
 const Bookattract = require('../../models/payment/bookAttractModel');
 const Attraction = require('../../models/product/attractionModel');
 const Invoice = require('../../models/payment/invoiceModel');
+const User = require('../../models/userModel');
 const asyncHandler = require('express-async-handler');
 
 const addBookingAttract = async (req, res) => {
-    const { id } = req.user;
     const attractId = req.params.attractId;
     const { visitor, visitDate } = req.body;
     try {
@@ -15,13 +15,31 @@ const addBookingAttract = async (req, res) => {
       const totalPrice = attract.price * visitor;
       const booking = new Bookattract({
         attractId,
-        userId: id,
+        userId: req.user.id,
         visitor,
         visitDate,
         totalPrice,
       });
-      await booking.save();
-      return res.status(201).json(booking);
+      const bookedAttract = await Booking.findByPk(booking.id, {
+        include: [
+            {
+                model: Attraction,
+                attributes: [
+                    'name',
+                    'price',
+                    'duration',
+                    'mainFacilities',
+                    'description',
+                    'features',
+                ],
+            },
+            {
+                model: User,
+                attributes: ['profileImage', 'url', 'username', 'email', 'mobile'],
+            },
+        ],
+    });
+    return res.status(201).json(bookedAttract);
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -39,7 +57,7 @@ const paymentAttract = asyncHandler(async (req, res) => {
       if (!booking) {
           return res.status(404).json({ message: 'Bookattract not found' });
       }
-      if (paymentMethod !== 'bayar di tempat') {
+      if (paymentMethod !== 'Bank') {
           return res.status(400).json({ message: 'Invalid payment method' });
       }
       function generateInvoiceId() {

@@ -74,11 +74,9 @@ try {
       return res.status(404).json({ msg: "No Data Found" });
     }
     const userId = req.user.id;
-    let fileName = "";
+    let fileName = attract.image;
 
-    if (req.files === null) {
-      fileName = attract.image;
-    } else {
+    if (req.files && req.files.file) {
       const file = req.files.file;
       const fileSize = file.data.length;
       const ext = path.extname(file.name);
@@ -103,17 +101,19 @@ try {
       });
     }
 
-    const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
+    const url = fileName
+      ? `${req.protocol}://${req.get("host")}/images/${fileName}`
+      : attract.url; // Use the existing URL if no new image is provided
+
       const updatedGuide = await Attraction.update(
         {
-          name: req.body.name,
-          description: req.body.description,
-          price: req.body.price,
-          duration: req.body.duration,
-          mainFacilities: req.body.mainFacilities,
-          features: req.body.features,
-          address: req.body.address,
-          image: fileName,
+          name: req.body.name || attract.name,
+          description: req.body.description || attract.description,
+          price: req.body.price || attract.price,
+          duration: req.body.duration || attract.duration,
+          mainFacilities: req.body.mainFacilities || attract.mainFacilities,
+          features: req.body.features || attract.features,
+          image: fileName || attract.image,
           url: url,
           partnerId: userId,
         },
@@ -152,7 +152,7 @@ const getAttraction = asyncHandler(async (req, res) => {
         include: [
           {
             model: Partner,
-            attributes: ['profileImage', 'url', 'username'],
+            attributes: ['profileImage', 'url', 'username', 'description', 'address'],
           },
         ],
       });
@@ -174,6 +174,8 @@ const getAttraction = asyncHandler(async (req, res) => {
             attributes: ['username', 'profileImage', 'url'],
           },
         ],
+        order: [['createdAt', 'DESC']], // Mengurutkan berdasarkan createdAt secara descending
+        limit: 3, // Memuat hanya 3 rating terbaru
       });  
       res.json({
         message: 'Attraction berhasil diambil',
@@ -194,6 +196,27 @@ const getAllAttraction = asyncHandler(async (req, res) => {
           attributes: ['profileImage', 'url', 'username'],
         },
       ],
+    });
+    res.json({
+      message: 'Attraction telah berhasil di ambil',
+      data,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const getTopAttract = asyncHandler(async (req, res) => {
+  try {
+    const data = await Attraction.findAll({
+      include: [
+        {
+          model: Partner,
+          attributes: ['profileImage', 'url', 'username'],
+        },
+      ],
+      group: ['Attraction.id'], // Group berdasarkan Attraction.id untuk menghindari pengulangan
+      order: [[Sequelize.literal('averageRating'), 'DESC']], // Mengurutkan berdasarkan averageRating secara descending    
     });
     res.json({
       message: 'Attraction telah berhasil di ambil',
@@ -332,6 +355,36 @@ const wishlistAttraction = asyncHandler(async (req, res) => {
   }
 });
 
+const getRatingAttract = asyncHandler(async(req,res)=>{
+  const { attractId } = req.params;
+
+  try {
+    const invoiceIds = await Invoice.findAll({
+      where: { attractId },
+      attributes: ['invoiceId'],
+    });
+
+    const invoiceIdList = invoiceIds.map((invoice) => invoice.invoiceId);
+
+    const ratings = await Rating.findAll({
+      where: { invoiceId: invoiceIdList },
+      include: [
+        {
+          model: User,
+          attributes: ['username', 'profileImage', 'url'],
+        },
+      ],
+    });
+
+    res.json({
+      message: 'Ratings for the room retrieved successfully',
+      ratings,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching ratings for the room', error: error.message });
+  }
+});
+
 module.exports = {
   addAttraction,
   updateAttraction,
@@ -340,4 +393,6 @@ module.exports = {
   deleteAttraction,
   likeAttract,
   wishlistAttraction,
+  getTopAttract,
+  getRatingAttract,
 }

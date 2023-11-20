@@ -1,6 +1,6 @@
 const express = require('express');
 const { authMiddleware, isPartner } = require('../middlewares/authMiddleware');
-const { addGuide, getGuide, getAllGuide, updateGuide, deleteGuide, likeGuide, wishlistGuide, } = require('../controllers/product/guideController');
+const { addGuide, getGuide, getAllGuide, updateGuide, deleteGuide, likeGuide, wishlistGuide, getTopGuide, getRatingGuide, } = require('../controllers/product/guideController');
 const { addBookingGuide, paymentGuide } = require('../controllers/payment/bookGuideController');
 const router = express.Router();
 
@@ -11,6 +11,8 @@ router.post('/booking/:guideId', authMiddleware, addBookingGuide);
 router.post('/booking/pay/:id', authMiddleware, paymentGuide);
 router.get('/get/:id', getGuide);
 router.get('/getAll', getAllGuide);
+router.get('/getRank', getTopGuide);
+router.get('/rating/:guideId', getRatingGuide);
 router.put('/update/:id', authMiddleware, isPartner, updateGuide);
 router.delete('/delete/:id', authMiddleware, isPartner, deleteGuide);
 

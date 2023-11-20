@@ -44,22 +44,25 @@ Booking.prototype.calculateDuration = function() {
     return checkOutDate.toISOString().split('T')[0];
 };
 
-Booking.addHook('beforeValidate', (booking, options) => {
+Booking.addHook('beforeValidate', async (booking, options) => {
     if (!booking.checkOutDate) {
         booking.checkOutDate = booking.calculateDuration();
     }
     if (!booking.totalPrice) {
         // Ambil price dari model Room dan hitung totalPrice
-        Room.findByPk(booking.roomId).then(room => {
-            booking.totalPrice = room.price * booking.duration;
-        });
+        const room = await Room.findByPk(booking.roomId);
+        booking.totalPrice = room.price * booking.duration;
     }
 });
 
 module.exports = Booking;
 
+(async()=>{
+    await db.sync()
+  })
+
 // Booking.sync().then((data)=>{
-//   console.log("Table success create");
-//   }).catch((err)=>{
-//     console.log("Table Error when create")
-//   });
+// console.log("Table Bookings success create");
+// }).catch((err)=>{
+//   console.log("Table Error when create")
+// });

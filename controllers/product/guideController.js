@@ -94,11 +94,9 @@ const updateGuide = asyncHandler(async (req, res) => {
       return res.status(404).json({ msg: "No Data Found" });
     }
     const userId = req.user.id;
-    let fileName = "";
+    let fileName = guide.image;
 
-    if (req.files === null) {
-      fileName = guide.image;
-    } else {
+    if (req.files && req.files.file) {
       const file = req.files.file;
       const fileSize = file.data.length;
       const ext = path.extname(file.name);
@@ -123,7 +121,10 @@ const updateGuide = asyncHandler(async (req, res) => {
       });
     }
 
-    const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
+    const url = fileName
+      ? `${req.protocol}://${req.get("host")}/images/${fileName}`
+      : guide.url; // Use the existing URL if no new image is provided
+
     const response = await fetch(geocodingUrl);
     const geocodingData = await response.json();
 
@@ -134,16 +135,16 @@ const updateGuide = asyncHandler(async (req, res) => {
 
       const updatedGuide = await Guide.update(
         {
-          name: req.body.name,
-          description: req.body.description,
-          price: req.body.price,
-          duration: req.body.duration,
-          mainFacilities: req.body.mainFacilities,
-          features: req.body.features,
+          name: req.body.name || guide.name ,
+          description: req.body.description || guide.description ,
+          price: req.body.price || guide.price ,
+          duration: req.body.duration || guide.duration ,
+          mainFacilities: req.body.mainFacilities || guide.mainFacilities ,
+          features: req.body.features || guide.features ,
           address: req.body.address,
           latitude,
           longitude,
-          image: fileName,
+          image: fileName || guide.image ,
           url: url,
           partnerId: userId,
         },
@@ -183,7 +184,7 @@ const getGuide = asyncHandler(async (req, res) => {
         include: [
           {
             model: Partner,
-            attributes: ['profileImage', 'url', 'username'],
+            attributes: ['profileImage', 'url', 'username', 'description', 'address'],
           },
         ],
       });
@@ -205,7 +206,10 @@ const getGuide = asyncHandler(async (req, res) => {
             attributes: ['username', 'profileImage', 'url'],
           },
         ],
+        order: [['createdAt', 'DESC']], // Mengurutkan berdasarkan createdAt secara descending
+        limit: 3, // Memuat hanya 3 rating terbaru
       });  
+
       res.json({
         message: 'Guide berhasil diambil',
         data,
@@ -225,6 +229,28 @@ const getAllGuide = asyncHandler(async (req, res) => {
           attributes: ['profileImage', 'url', 'username'],
         },
       ],
+    });
+    res.json({
+      message: 'Guide telah berhasil di ambil',
+      data,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const getTopGuide = asyncHandler(async (req, res) => {
+  try {
+    const data = await Guide.findAll({
+      include: [
+        {
+          model: Partner,
+          attributes: ['profileImage', 'url', 'username'],
+        },
+      ],
+      group: ['Guide.id'], // Group berdasarkan Guide.id untuk menghindari pengulangan
+      order: [[Sequelize.literal('averageRating'), 'DESC']], // Mengurutkan berdasarkan averageRating secara descending
+   
     });
     res.json({
       message: 'Guide telah berhasil di ambil',
@@ -363,6 +389,36 @@ const wishlistGuide = asyncHandler(async (req, res) => {
   }
 });
 
+const getRatingGuide = asyncHandler(async(req,res)=>{
+  const { guideId } = req.params;
+
+  try {
+    const invoiceIds = await Invoice.findAll({
+      where: { guideId },
+      attributes: ['invoiceId'],
+    });
+
+    const invoiceIdList = invoiceIds.map((invoice) => invoice.invoiceId);
+
+    const ratings = await Rating.findAll({
+      where: { invoiceId: invoiceIdList },
+      include: [
+        {
+          model: User,
+          attributes: ['username', 'profileImage', 'url'],
+        },
+      ],
+    });
+
+    res.json({
+      message: 'Ratings for the room retrieved successfully',
+      ratings,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching ratings for the room', error: error.message });
+  }
+});
+
 module.exports = {
   addGuide,
   updateGuide,
@@ -371,4 +427,6 @@ module.exports = {
   deleteGuide,
   likeGuide,
   wishlistGuide,
+  getTopGuide,
+  getRatingGuide,
 }

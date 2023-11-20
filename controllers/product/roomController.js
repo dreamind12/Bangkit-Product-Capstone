@@ -66,72 +66,74 @@ const addRoom = asyncHandler(async (req, res) => {
     });
 });
 
-const updateRoom = asyncHandler(async(req, res) => {
+const updateRoom = asyncHandler(async (req, res) => {
   try {
-      const room = await Room.findOne({
-          where: {
-              id: req.params.id
-          }
-      });
+    const room = await Room.findOne({
+      where: {
+        id: req.params.id,
+      },
+    });
 
-      if (!room) {
-          return res.status(404).json({ msg: "No Data Found" });
+    if (!room) {
+      return res.status(404).json({ msg: "No Data Found" });
+    }
+
+    const userId = req.user.id;
+    let fileName = room.image; // Default to the existing image
+
+    if (req.files && req.files.file) {
+      const file = req.files.file;
+      const fileSize = file.data.length;
+      const ext = path.extname(file.name);
+      fileName = file.md5 + ext;
+      const allowedType = ['.png', '.jpg', '.jpeg'];
+
+      if (!allowedType.includes(ext.toLowerCase())) {
+        return res.status(422).json({ msg: "Invalid Images" });
       }
 
-      const userId = req.user.id;
-      let fileName = "";
-
-      if (req.files === null) {
-          fileName = room.image;
-      } else {
-          const file = req.files.file;
-          const fileSize = file.data.length;
-          const ext = path.extname(file.name);
-          fileName = file.md5 + ext;
-          const allowedType = ['.png', '.jpg', '.jpeg'];
-
-          if (!allowedType.includes(ext.toLowerCase())) {
-              return res.status(422).json({ msg: "Invalid Images" });
-          }
-
-          if (fileSize > 5000000) {
-              return res.status(422).json({ msg: "Image must be less than 5 MB" });
-          }
-
-          const filepath = `./public/images/${room.image}`;
-          fs.unlinkSync(filepath);
-
-          file.mv(`./public/images/${fileName}`, (err) => {
-              if (err) return res.status(500).json({ msg: err.message });
-          });
+      if (fileSize > 5000000) {
+        return res.status(422).json({ msg: "Image must be less than 5 MB" });
       }
 
-      const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
+      const filepath = `./public/images/${room.image}`;
+      if (fs.existsSync(filepath)) {
+        fs.unlinkSync(filepath);
+      }
 
-      // Perbarui data Room
-      const updatedRoom = await room.update({
-          name: req.body.name,
-          description: req.body.description,
-          price: req.body.price,
-          numberOfAdults: req.body.numberOfAdults,
-          numberOfChildren: req.body.numberOfChildren,
-          bedOption: req.body.bedOption,
-          mainFacilities: req.body.mainFacilities,
-          popularLocation: req.body.popularLocation,
-          checkInCheckOut: req.body.checkInCheckOut,
-          roomSize: req.body.roomSize,
-          image: fileName,
-          url: url,
-          partnerId: userId,
+      file.mv(`./public/images/${fileName}`, (err) => {
+        if (err) return res.status(500).json({ msg: err.message });
       });
+    }
 
-      res.status(200).json({
-          msg: "Room Updated Successfully",
-          data: updatedRoom
-      });
+    const url = fileName
+      ? `${req.protocol}://${req.get("host")}/images/${fileName}`
+      : room.url; // Use the existing URL if no new image is provided
+
+    // Update Room data
+    const updatedRoom = await room.update({
+      name: req.body.name || room.name,
+      description: req.body.description || room.description,
+      price: req.body.price || room.price,
+      numberOfAdults: req.body.numberOfAdults || room.numberOfAdults,
+      numberOfChildren: req.body.numberOfChildren || room.numberOfChildren,
+      bedOption: req.body.bedOption || room.bedOption,
+      mainFacilities: req.body.mainFacilities || room.mainFacilities,
+      popularLocation: req.body.popularLocation || room.popularLocation,
+      checkInCheckOut: req.body.checkInCheckOut || room.checkInCheckOut,
+      roomSize: req.body.roomSize || room.roomSize,
+      image: fileName || room.image,
+      url: url,
+      partnerId: userId,
+    });
+
+    res.status(200).json({
+      msg: "Room Updated Successfully",
+      data: updatedRoom,
+    });
   } catch (error) {
-      console.log(error.message);
-      res.status(500).json({ msg: "Internal Server Error" });
+    console.log(error.message);
+    res.status(500).json({ msg: "Internal Server Error" });
   }
 });
 
@@ -144,7 +146,7 @@ const getRoom = asyncHandler(async (req, res) => {
       include: [
         {
           model: Partner,
-          attributes: ['profileImage', 'url', 'username'],
+          attributes: ['profileImage', 'url', 'username', 'description', 'address'],
         },
       ],
     });
@@ -168,10 +170,12 @@ const getRoom = asyncHandler(async (req, res) => {
           attributes: ['username', 'profileImage', 'url'],
         },
       ],
+      order: [['createdAt', 'DESC']], // Mengurutkan berdasarkan createdAt secara descending
+      limit: 3, // Memuat hanya 3 rating terbaru
     });
-
+    
     res.json({
-      message: 'Room details and ratings retrieved successfully',
+      message: 'Room details and latest 3 ratings retrieved successfully',
       data,
       ratings,
     });
@@ -192,6 +196,28 @@ const getAllRoom = asyncHandler(async (req, res) => {
     });
     res.json({
       message: 'Room telah berhasil di ambil',
+      data,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const getRankRoom = asyncHandler(async (req, res) => {
+  try {
+    const data = await Room.findAll({
+      include: [
+        {
+          model: Partner,
+          attributes: ['profileImage', 'url', 'username'],
+        },
+      ],
+      group: ['Room.id'], // Group berdasarkan Room.id untuk menghindari pengulangan
+      order: [[Sequelize.literal('averageRating'), 'DESC']], // Mengurutkan berdasarkan averageRating secara descending
+    });
+
+    res.json({
+      message: 'Rooms berhasil diambil berdasarkan averageRating',
       data,
     });
   } catch (error) {
@@ -327,6 +353,36 @@ const wishlistRoom = asyncHandler(async (req, res) => {
   }
 });
 
+const getRatingRoom = asyncHandler(async(req,res)=>{
+  const { roomId } = req.params;
+
+  try {
+    const invoiceIds = await Invoice.findAll({
+      where: { roomId },
+      attributes: ['invoiceId'],
+    });
+
+    const invoiceIdList = invoiceIds.map((invoice) => invoice.invoiceId);
+
+    const ratings = await Rating.findAll({
+      where: { invoiceId: invoiceIdList },
+      include: [
+        {
+          model: User,
+          attributes: ['username', 'profileImage', 'url'],
+        },
+      ],
+    });
+
+    res.json({
+      message: 'Ratings for the room retrieved successfully',
+      ratings,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching ratings for the room', error: error.message });
+  }
+});
+
 module.exports = {
   addRoom,
   updateRoom,
@@ -335,4 +391,6 @@ module.exports = {
   deleteRoom,
   likeRoom,
   wishlistRoom,
+  getRatingRoom,
+  getRankRoom
 }

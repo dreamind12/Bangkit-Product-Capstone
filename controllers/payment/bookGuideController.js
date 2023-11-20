@@ -1,10 +1,10 @@
 const Bookguide = require('../../models/payment/bookGuideModel');
 const Guide = require('../../models/product/guideModel');
 const Invoice = require('../../models/payment/invoiceModel');
+const User = require('../../models/userModel');
 const asyncHandler = require('express-async-handler');
 
 const addBookingGuide = async (req, res) => {
-  const { id } = req.user;
   const guideId = req.params.guideId;
   const { visitor, visitDate  } = req.body;
   try {
@@ -15,13 +15,31 @@ const addBookingGuide = async (req, res) => {
     const totalPrice = guide.price * visitor;
     const booking = new Bookguide({
       guideId,
-      userId: id,
+      userId: req.user.id,
       visitor,
       visitDate,
       totalPrice,
     });
-    await booking.save();
-    return res.status(201).json(booking);
+    // Fetch the booking with the associated room data
+    const bookedGuide = await Booking.findByPk(booking.id, {
+      include: [
+          {
+              model: Guide,
+              attributes: [
+                  'name',
+                  'price',
+                  'duration',
+                  'mainFacilities',
+                  'address',
+              ],
+          },
+          {
+              model: User,
+              attributes: ['profileImage', 'url', 'username', 'email', 'mobile'],
+          },
+      ],
+  });
+  return res.status(201).json(bookedGuide);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -39,7 +57,7 @@ const paymentGuide = asyncHandler(async (req, res) => {
       if (!booking) {
           return res.status(404).json({ message: 'Bookguide not found' });
       }
-      if (paymentMethod !== 'bayar di tempat') {
+      if (paymentMethod !== 'Bank') {
           return res.status(400).json({ message: 'Invalid payment method' });
       }
       function generateInvoiceId() {
