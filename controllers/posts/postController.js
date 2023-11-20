@@ -425,27 +425,45 @@ const updatePost = asyncHandler(async (req, res) => {
   }
 });
 
-const deletePost = asyncHandler(async(req, res)=>{
-  const post = await Post.findOne({
-      where:{
-          postid : req.params.postid
-      }
-  });
-  if(!post) return res.status(404).json({msg: "No Data Found"});
+const deletePostById = asyncHandler(async(req, res)=>{
+  const postId = req.params.postId;
 
   try {
-      const filepath = `./public/images/${Post.image}`;
-      fs.unlinkSync(filepath);
-      await post.destroy({
-          where:{
-              id : req.params.id
-          }
-      });
-      res.status(200).json({msg: "Post Deleted Successfuly"});
+    const post = await Post.findByPk(postId);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    await post.destroy();
+
+    return res.status(200).json({ message: 'Post deleted successfully' });
   } catch (error) {
-      console.log(error.message);
+    console.error('Error deleting post:', error);
+    return res.status(500).json({ message: 'Error deleting post' });
   }
 });
+// const deletePost = asyncHandler(async(req, res)=>{
+//   const post = await Post.findOne({
+//       where:{
+//           postId : req.params.postId
+//       }
+//   });
+//   if(!post) return res.status(404).json({msg: "No Data Found"});
+
+//   try {
+//       const filepath = `./public/images/${Post.image}`;
+//       fs.unlinkSync(filepath);
+//       await post.destroy({
+//           where:{
+//               id : req.params.id
+//           }
+//       });
+//       res.status(200).json({msg: "Post Deleted Successfuly"});
+//   } catch (error) {
+//       console.log(error.message);
+//   }
+// });
 
 module.exports = {
     createPost,
@@ -456,5 +474,5 @@ module.exports = {
     likePost,
     wishlistPost,
     updatePost,
-    deletePost,
+    deletePostById,
 }

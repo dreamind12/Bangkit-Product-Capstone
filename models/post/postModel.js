@@ -43,8 +43,8 @@ module.exports = Post;
   await db.sync()
 })
 
-Post.sync().then((data)=>{
-  console.log("Table success create");
-  }).catch((err)=>{
-    console.log("Table Error when create")
-  });
+// Post.sync().then((data)=>{
+//   console.log("Table success create");
+//   }).catch((err)=>{
+//     console.log("Table Error when create")
+//   });
