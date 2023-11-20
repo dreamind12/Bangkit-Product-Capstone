@@ -6,6 +6,9 @@ const Destination = db.define('Destination', {
     type: Sequelize.STRING,
     allowNull: false,
   },
+  address: {
+    type: Sequelize.STRING,
+  },
   latitude: {
     type: Sequelize.FLOAT,
     allowNull: false,
@@ -18,3 +21,8 @@ const Destination = db.define('Destination', {
 });
 
 module.exports = Destination;
+Post.sync().then((data)=>{
+  console.log("Table success create");
+  }).catch((err)=>{
+    console.log("Table Error when create")
+  });

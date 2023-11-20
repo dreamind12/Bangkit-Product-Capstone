@@ -1,5 +1,5 @@
 // navigationController.js
-const Destination = require('../models/destinationModel');
+const Destination = require('../../models/destination/destinationModel');
 
 // Fungsi untuk menghitung jarak antara dua koordinat menggunakan rumus Haversine
 function calculateDistance(lat1, lon1, lat2, lon2) {
