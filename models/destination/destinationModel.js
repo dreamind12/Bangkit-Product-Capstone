@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize');
 const db = require('../../config/Database');
+const Step = require('../post/stepModel');
 
 const Destination = db.define('Destination', {
   name: {
@@ -20,9 +21,9 @@ const Destination = db.define('Destination', {
   // Anda dapat menambahkan informasi tambahan sesuai kebutuhan
 });
 
-module.exports = Destination;
-Post.sync().then((data)=>{
-  console.log("Table success create");
-  }).catch((err)=>{
-    console.log("Table Error when create")
-  });
+// module.exports = Destination;
+// Destination.sync().then((data)=>{
+//   console.log("Table success create");
+//   }).catch((err)=>{
+//     console.log("Table Error when create")
+//   });

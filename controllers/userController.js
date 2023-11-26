@@ -163,19 +163,35 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 });
 
+const validPreferences = ['wisata alam', 'museum', 'pantai', 'hidden gem'];
+
 const choosePreference = asyncHandler(async (req, res) => {
   const { preference } = req.body;
+
+  if (!Array.isArray(preference)) {
+    return res.status(400).send({ error: 'Preference must be an array' });
+  }
+
+  for (let i = 0; i < preference.length; i++) {
+    if (!validPreferences.includes(preference[i])) {
+      return res.status(400).send({ error: `Invalid preference: ${preference[i]}` });
+    }
+  }
+
   const user = await users.findOne({
     where: {
       id: req.user.id,
     },
   });
-  users.preference = preference;
-  await users.save();
+
+  user.preference = preference;
+  await user.save();
+
   // Set cookie has_chosen_preference
   res.cookie("has_chosen_preference", "true", {
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 hari
   });
+
   res.json({
     user
   });
@@ -188,6 +204,33 @@ const cookiePreference = asyncHandler(async (req, res) => {
     return res.render("partners/choose-preference");
   }
 });
+
+
+// const choosePreference = asyncHandler(async (req, res) => {
+//   const { preference } = req.body;
+//   const user = await users.findOne({
+//     where: {
+//       id: req.user.id,
+//     },
+//   });
+//   users.preference = preference;
+//   await users.save();
+//   // Set cookie has_chosen_preference
+//   res.cookie("has_chosen_preference", "true", {
+//     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 hari
+//   });
+//   res.json({
+//     user
+//   });
+// });
+
+// const cookiePreference = asyncHandler(async (req, res) => {
+//   const hasChosenPreference = req.cookies.has_chosen_preference === "true";
+//   if (!hasChosenPreference) {
+//     // Tampilkan form untuk memilih Preference
+//     return res.render("partners/choose-preference");
+//   }
+// });
 
 const searchAll = asyncHandler(async (req, res) => {
   try {

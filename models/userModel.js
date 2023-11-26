@@ -25,7 +25,8 @@ const User = db.define(
       allowNull: false,
     },
     preference: {
-      type: Sequelize.STRING,
+      type: Sequelize.ARRAY(Sequelize.STRING),
+      values: ['wisata alam', 'museum', 'pantai', 'hidden gem'],
     },
     point:{
       type: Sequelize.INTEGER,
