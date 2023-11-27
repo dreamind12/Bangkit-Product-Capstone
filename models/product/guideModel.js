@@ -1,6 +1,6 @@
 const Sequelize = require("sequelize");
 const Partner = require('../partnerModel');
-const db = require("../../config/Database");
+const db = require("../../config/database");
 
 const Guide = db.define("Guide", {
 name: Sequelize.STRING,

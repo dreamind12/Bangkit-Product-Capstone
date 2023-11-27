@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize');
-const db = require('../../config/Database');
+const db = require('../../config/database');
 const Post = require('./postModel');
 
 const Step = db.define('Step', {

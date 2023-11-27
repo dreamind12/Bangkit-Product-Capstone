@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize');
-const db = require('../../config/Database');
+const db = require('../../config/database');
 const Step = require('../post/stepModel');
 
 const Destination = db.define('Destination', {
