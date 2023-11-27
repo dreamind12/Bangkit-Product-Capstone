@@ -201,7 +201,7 @@ const cookiePreference = asyncHandler(async (req, res) => {
   const hasChosenPreference = req.cookies.has_chosen_preference === "true";
   if (!hasChosenPreference) {
     // Tampilkan form untuk memilih Preference
-    return res.render("partners/choose-preference");
+    return res.render("User/choose-preference");
   }
 });
 
