@@ -1,7 +1,7 @@
 const Sequalize = require('sequelize');
 
-const db = new Sequalize('tourism','root','',{
-host: 'localhost',
+const db = new Sequalize('tourism','root','capstone',{
+host: '34.101.52.82',
 dialect: 'mysql',
 });
 

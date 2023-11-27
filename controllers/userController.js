@@ -8,7 +8,7 @@ const Rating = require('../models/payment/ratingModel');
 const Wishlist = require('../models/likewish/wishlistModel');
 const asyncHandler = require('express-async-handler');
 const { generateToken } = require("../config/jwtToken");
-const { generateRefreshToken } = require("../config/refreshtoken");
+const { generateRefreshToken } = require("../config/refreshToken");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -41,10 +41,10 @@ const loginUser = async (req, res) => {
   const { email, password } = req.body;
   const findUser = await user.findOne({ where: { email } });
   if (findUser && (await findUser.isPasswordMatched(password))) {
-    const refreshToken = await generateRefreshToken(findUser.id);
+    const Token = await generateToken(findUser.id);
     res.setHeader(
       "Set-Cookie",
-      cookie.serialize("refreshToken", refreshToken, {
+      cookie.serialize("Token", Token, {
         httpOnly: true,
         maxAge: 72 * 60 * 60 * 1000,
       })
@@ -52,7 +52,7 @@ const loginUser = async (req, res) => {
     const jwtPayload = {
       id: findUser.id, 
     };
-    const token = jwt.sign(jwtPayload, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign(jwtPayload, process.env.JWT_SECRET, { expiresIn: '7d' });
     res.json({
       _id: findUser.id,
       email: findUser.email,
@@ -296,6 +296,21 @@ const searchAll = asyncHandler(async (req, res) => {
       ],
     });
     searchResults.push(...attractionSearchResults);
+
+    // const postSearchResults = await Post.findAll({
+    //   where: {
+    //     judul: {
+    //       [Sequelize.Op.like]: `%${keyword}%`,
+    //     },
+    //   },
+    //   include: [
+    //     {
+    //       model: User,
+    //       attributes: ['username', 'profileImage'],
+    //     },
+    //   ],
+    // });
+    // searchResults.push(...postSearchResults);
 
     res.json({
       message: 'Hasil pencarian',
@@ -542,6 +557,27 @@ const getAllWishlists = asyncHandler(async (req, res) => {
   }
 });
 
+const logoutUser = asyncHandler(async(req,res)=>{
+  try {
+    // Clear the cookie
+    res.setHeader(
+      "Set-Cookie",
+      cookie.serialize("Token", "", {
+        httpOnly: true,
+        maxAge: 0,
+      })
+    );
+
+    // Clear the token from the response
+    delete req.token;
+
+    // Send a success message
+    res.json({ message: "Successfully logged out" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error logging out" });
+  }
+});
 
 module.exports = {
   createUser,
@@ -556,4 +592,5 @@ module.exports = {
   getDetailInvoice,
   addRating,
   getAllWishlists,
+  logoutUser,
 }

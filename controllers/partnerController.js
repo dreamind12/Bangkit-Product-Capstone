@@ -1,7 +1,7 @@
 const Partner = require('../models/partnerModel');
 const asyncHandler = require('express-async-handler');
 const { generateToken } = require("../config/jwtToken");
-const { generateRefreshToken } = require("../config/refreshtoken");
+const { generateRefreshToken } = require('../config/refreshToken');
 const Room = require('../models/product/roomModel');
 const Guide = require('../models/product/guideModel');
 const Attraction = require('../models/product/attractionModel');
