@@ -31,7 +31,7 @@ const addGuide = asyncHandler(async (req, res) => {
     });
   }
 
-  const apiKey = 'AIzaSyDW3vHQcYWxhBm9jpU6RLgptGKjXtoT-fU';
+  const apiKey = 'AIzaSyCiwu99-z18L6lJUcq-8WUG2YtBBT4F3S8';
   const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(req.body.address)}&key=${apiKey}`;
   
   file.mv(`./public/images/${fileName}`, async (err) => {
@@ -82,7 +82,7 @@ const addGuide = asyncHandler(async (req, res) => {
 });
 
 const updateGuide = asyncHandler(async (req, res) => {
-  const apiKey = 'AIzaSyDW3vHQcYWxhBm9jpU6RLgptGKjXtoT-fU';
+  const apiKey = 'AIzaSyCiwu99-z18L6lJUcq-8WUG2YtBBT4F3S8';
   const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(req.body.address)}&key=${apiKey}`;
   try {
     const guide = await Guide.findOne({

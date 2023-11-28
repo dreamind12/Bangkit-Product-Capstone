@@ -20,7 +20,7 @@ const Sequelize = require('sequelize');
 const createPartner = asyncHandler(async (req, res) => {
   const { username, email, mobile, password, address, description } = req.body;
 
-  const apiKey = 'AIzaSyDW3vHQcYWxhBm9jpU6RLgptGKjXtoT-fU';
+  const apiKey = 'AIzaSyCiwu99-z18L6lJUcq-8WUG2YtBBT4F3S8';
   const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
 
   try {
@@ -179,7 +179,7 @@ const updatePartner = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { username, email, mobile, password, address, description } = req.body;
 
-  const apiKey = 'AIzaSyDW3vHQcYWxhBm9jpU6RLgptGKjXtoT-fU';
+  const apiKey = 'AIzaSyCiwu99-z18L6lJUcq-8WUG2YtBBT4F3S8';
   const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
 
   try {

@@ -7,6 +7,7 @@ const Invoice = require('../../models/payment/invoiceModel');
 const Like = require('../../models/likewish/likeModel');
 const Wishlist = require('../../models/likewish/wishlistModel');
 const path = require('path');
+const {Op,Sequelize} = require('sequelize');
 const fs = require('fs');
 
 const addAttraction = asyncHandler(async (req, res) => {
