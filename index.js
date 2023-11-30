@@ -13,7 +13,14 @@ const userRoute = require('./routes/userRoute');
 const imageRoute = require('./routes/imageRoute');
 
 const app = express();
-app.use(cors());
+const corsOptions = {
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, 
+    optionsSuccessStatus: 204, 
+  };
+app.use(cors(corsOptions));
+
 app.use(fileUpload());
 app.use(cookieParser());
 app.use(express.static("public"));

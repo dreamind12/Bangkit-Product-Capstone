@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/dreamind12/Bangkit-Product-Capstone#readme",
   "dependencies": {
+    "@google-cloud/storage": "^7.6.0",
     "@google-cloud/vision": "^4.0.2",
     "@googlemaps/google-maps-services-js": "^3.3.41",
     "bcrypt": "^5.1.1",
