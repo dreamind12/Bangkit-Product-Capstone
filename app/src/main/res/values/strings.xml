@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">TourEZ</string>
+    <string name="title_activity_main_menu">MainMenuActivity</string>
+    <string name="title_home">Home</string>
+    <string name="title_wishlist">Wishlist</string>
+    <string name="title_journey">Journey</string>
+    <string name="title_profile">Profile</string>
+    <string name="title_imageRec">Image</string>
+    <string name="title_box">Yeayy</string>
+    <string name="message_box">Kamu berhasil daftar</string>
+    <string name="gagal_daftar">Kamu gagal daftar</string>
+    <string name="next_box">Masuk</string>
+</resources>

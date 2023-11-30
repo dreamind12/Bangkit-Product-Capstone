@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".view.menu.ui.home.HomeFragment">
+    
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="45dp"
+            tools:ignore="MissingConstraints">
+
+            <com.google.android.material.search.SearchBar
+                android:layout_width="235dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="35dp"
+                android:text="Cari Tempat"
+                tools:ignore="MissingConstraints" />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/profile_image"
+                android:layout_marginTop="17dp"
+                android:layout_width="49dp"
+                android:layout_height="49dp"
+                android:src="@drawable/fp"
+                app:civ_border_color="#FF000000"
+                app:civ_border_width="2dp" />
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/poster"
+            android:layout_width="300dp"
+            android:layout_height="130dp"
+            android:layout_marginTop="130dp"
+            android:background="@drawable/poster"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:ignore="MissingConstraints" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            app:layout_constraintTop_toBottomOf="@id/poster"
+            android:layout_marginTop="10dp"
+            tools:ignore="MissingConstraints">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/all_menu"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="45dp"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:src="@drawable/all"
+                app:civ_border_color="#FF000000"
+                app:civ_border_width="2dp" />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/menu_hotel"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="30dp"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:src="@drawable/hotel"
+                app:civ_border_color="#FF000000"
+                app:civ_border_width="2dp" />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/menu_guide"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="30dp"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:src="@drawable/guide"
+                app:civ_border_color="#FF000000"
+                app:civ_border_width="2dp" />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/menu_attract"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="30dp"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:src="@drawable/attract"
+                app:civ_border_color="#FF000000"
+                app:civ_border_width="2dp" />
+
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    
+
+</ScrollView>
