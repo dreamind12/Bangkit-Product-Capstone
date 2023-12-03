@@ -4,7 +4,7 @@ const { addGuide, getGuide, getAllGuide, updateGuide, deleteGuide, likeGuide, wi
 const { addBookingGuide, paymentGuide } = require('../controllers/payment/bookGuideController');
 const router = express.Router();
 
-router.post('/create', authMiddleware, isPartner, addGuide);
+router.post('/create', authMiddleware, addGuide);
 router.post('/like/:id', authMiddleware, likeGuide);
 router.post('/wishlist/:id', authMiddleware, wishlistGuide);
 router.post('/booking/:guideId', authMiddleware, addBookingGuide);
@@ -13,7 +13,7 @@ router.get('/get/:id', getGuide);
 router.get('/getAll', getAllGuide);
 router.get('/getRank', getTopGuide);
 router.get('/rating/:guideId', getRatingGuide);
-router.put('/update/:id', authMiddleware, isPartner, updateGuide);
-router.delete('/delete/:id', authMiddleware, isPartner, deleteGuide);
+router.put('/update/:id', authMiddleware, updateGuide);
+router.delete('/delete/:id', authMiddleware, deleteGuide);
 
 module.exports = router;

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "starlit-byway-402907",
+  "private_key_id": "b85360c1c4cb750ca5f901871d4b25250224534d",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC4LrCE5CntPYJv\nYPqK7tZbg1W2vCBRVCE8t2ElQWPqLvsB1QdGxC83flzjS+/Qalh6McynDF49kUzZ\nviP9ESAR5PvpaUsqdgzLtMlE9uF35OmiD476a0aXPW6/Z8SxxQDLz2pASyjrSxye\n6k7bbC6vTWPJfKKGAYXSQe9CP2pEwHmjMjUKTCU55iCbHvii8xkyz8Zl6QKo9ziO\nou8JJlOoBUDA5auzOGGN5t+lV+qydZ/BUPg1Fu6rBJfxk7VWbt78CH8ZWd97upBR\n2wMem/xX4O5L/l6rxq3P4pjN8By0nQ7oi3UbkP9ew/j02aBILKS5YS35DdKLzJI0\nfhvkscv1AgMBAAECggEAEY2xmRi9vjSMh9zwQ+l7WIFt29qWIeoouMapZYmT4i/U\nEFqjNOVhsqJCbA9CrdRU1mCEpq8RFEES1/W9LFNDgTEXqSk11rglhAyY2g/FcU3J\nzn45HDi5I5ThRzC2mFK0Prhn4fTH05T3B1ZBabwnvuFbT0qnmqnufRl3mhK9KAwe\nZo9LAHQIuCSuv6ULOTbB+cjzGexjU7PV96qQzRsOIyrdr2ZBBD9xq0h1kSdJz6gn\nXJYVXM6TOeFBoy8g8r0o1lAVNlgkT1etE5z9Ay/m+iM/+V8eUeCVz7t/N6/vQDX4\nZfdVHo8VBgc2I9vFsv/BPz+dnI5tNDhsJUQ2HY2gAQKBgQDynD3cP08blEVbsVgt\n68y9LU8o93Vkzh5Dh92cEnw9fgf1AdIsGAH9n0SQkw3fCox+Sn49/eBVl5FZbaTu\nIwbidd8BsyeNT5uRFqW/fp1Iwzqplpba/M46lKPaygtRwcVroJeexAnZ8aWtnAgd\nCScAk4rtHv33fQ7FggdZpudP9QKBgQDCWPCDGeKtLL4+IxVzKIS+M8dnIUEm/bhY\ner1vgOA4LGhRJUxey/eaVQMqXRhUp5WPHOwPGkeQnTniHUWU4AkpYndiFbngamu0\nv1hSnmZj0d+lADNPghgvrFA+08+GAPk4uC8PEkC/vCFSBluSix1nM32wFNWqQehU\nC+GYHf8MAQKBgA9PnPfRZwSujtIClzYOs5Uczuoe8+GwwGgyouG+qOiYk5f6zXDK\n8xU2f/U/0phI6iTuPpla9FVyg1HJgaclvsF7/t70l4Jri73UWBGFxBdbetBJGKwp\nWDqKNu0P4zb9q5/nOqpiZNzES1hxiHGMqlF2/kWIty5vTgdY9W3LAr4hAoGAErJ9\nyQ8XeLOiRdYYPTD7vFS87VYMr5SfRJviV7TdXWogSxY8h641zvo4yL2WFqbcw5zz\ntOxBUE9f/znztMPs/bdEZwJSFJ4IaKYz+BbXIOlTC8u+I/sPGp8IRVMZVvoHAAbw\nOBH4erm9tud3rdyGYqRYhjUq7StUD6no9TqFjAECgYA4wjF8WdIyHgtbiL8LPv+Y\nQA2Ju3mJGV9RGy6M6dg2FhbWvYEvehHy1MGTcwCR+Wit5y6Izdf1svJFHxS4FkVD\nsWzlrYyAXmMwHelaKrxhe2MB70B4OPxbc9MjojfjnCozMITXDdAyMDxetFSuPJbi\nRWFl23pB2sGcMg8/XVuAWQ==\n-----END PRIVATE KEY-----\n",
+  "client_email": "cloud-storage@starlit-byway-402907.iam.gserviceaccount.com",
+  "client_id": "108099805858592416303",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/cloud-storage%40starlit-byway-402907.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

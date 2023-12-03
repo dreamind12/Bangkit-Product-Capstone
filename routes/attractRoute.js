@@ -4,7 +4,7 @@ const { addAttraction, getAttraction, getAllAttraction, updateAttraction, delete
 const { addBookingAttract, paymentAttract } = require('../controllers/payment/bookAttractController');
 const router = express.Router();
 
-router.post('/create', authMiddleware, isPartner, addAttraction);
+router.post('/create', authMiddleware, addAttraction);
 router.post('/like/:id', authMiddleware, likeAttract);
 router.post('/wishlist/:id', authMiddleware, wishlistAttraction);
 router.post('/booking/:attractId', authMiddleware, addBookingAttract);
@@ -13,7 +13,7 @@ router.get('/get/:id', authMiddleware, getAttraction);
 router.get('/getAll', getAllAttraction);
 router.get('/getRank', getTopAttract);
 router.get('/rating/:attractId', getRatingAttract);
-router.put('/update/:id', authMiddleware, isPartner, updateAttraction);
-router.delete('/delete/:id', authMiddleware, isPartner, deleteAttraction);
+router.put('/update/:id', authMiddleware, updateAttraction);
+router.delete('/delete/:id', authMiddleware, deleteAttraction);
 
 module.exports = router;

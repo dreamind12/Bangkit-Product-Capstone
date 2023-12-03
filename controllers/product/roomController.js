@@ -7,63 +7,68 @@ const Invoice = require('../../models/payment/invoiceModel');
 const Like = require('../../models/likewish/likeModel');
 const Wishlist = require('../../models/likewish/wishlistModel');
 const path = require('path');
-const fs = require('fs');
-const {Op,Sequelize} = require('sequelize');
+const {Sequelize} = require('sequelize');
+const { Storage } = require('@google-cloud/storage');
+const keyFile = path.join(__dirname, '../../config/cloudKey.json');
+const bucketName = 'capstone-tourism';
+
+const storage = new Storage({
+  projectId: 'starlit-byway-402907',
+  keyFilename: keyFile,
+});
 
 const addRoom = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
-    const file = req.files.file;
-    const fileSize = file.size;
-    const ext = path.extname(file.name);
-    const fileName = file.md5 + ext;
-    const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
-    const allowedTypes = ['.png', '.jpeg', '.jpg'];  
-    if (!allowedTypes.includes(ext.toLowerCase())) {
-      return res.status(422).json({
-        status: 422,
-        message: 'Invalid image type'
-      });
-    }
-    if (fileSize > 5000000) {
-      return res.status(422).json({
-        status: 422,
-        message: "Image must be less than 5MB"
-      });
-    }
-    file.mv(`./public/images/${fileName}`, async (err) => {
-      if (err) {
-        return res.status(500).json({
-          status: 500,
-          message: err.message
-        });
-      }
-      try {
-        const data = await Room.create({
-          name: req.body.name,
-          description: req.body.description,
-          price: req.body.price,
-          numberOfAdults: req.body.numberOfAdults,
-          numberOfChildren: req.body.numberOfChildren,
-          bedOption: req.body.bedOption,
-          mainFacilities: req.body.mainFacilities,
-          popularLocation: req.body.popularLocation,
-          checkInCheckOut: req.body.checkInCheckOut,
-          roomSize: req.body.roomSize,
-          image: fileName,
-          url: url,
-          partnerId: userId,          
-        });
-        res.json({
-          message: 'Room has been added',
-          data,
-        });
-      } catch (error) {
-        res.status(500).json({
-          status: 500,
-          message: error.message
-        });
-      }
+  const userId = req.user.id;
+  const file = req.files.file;
+  const ext = path.extname(file.name);
+  const fileName = file.md5 + ext;
+  const fileDestination = `images/rooms/${fileName}`;
+  const fileURL = `https://storage.googleapis.com/${bucketName}/${fileDestination}`;
+
+  const fileBucket = storage.bucket(bucketName);
+  const fileStream = fileBucket.file(fileDestination).createWriteStream({
+    metadata: {
+      contentType: file.mimetype,
+    },
+  });
+
+  fileStream.on('error', (err) => {
+    return res.status(500).json({
+      status: 500,
+      message: err.message,
     });
+  });
+
+  fileStream.on('finish', async () => {
+    try {
+      const data = await Room.create({
+        name: req.body.name,
+        description: req.body.description,
+        price: req.body.price,
+        numberOfAdults: req.body.numberOfAdults,
+        numberOfChildren: req.body.numberOfChildren,
+        bedOption: req.body.bedOption,
+        mainFacilities: req.body.mainFacilities,
+        popularLocation: req.body.popularLocation,
+        checkInCheckOut: req.body.checkInCheckOut,
+        roomSize: req.body.roomSize,
+        image: fileName,
+        url: fileURL,
+        partnerId: userId,
+      });
+      res.json({
+        message: 'Room has been added',
+        data,
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: 500,
+        message: error.message,
+      });
+    }
+  });
+
+  fileStream.end(file.data);
 });
 
 const updateRoom = asyncHandler(async (req, res) => {
@@ -79,58 +84,89 @@ const updateRoom = asyncHandler(async (req, res) => {
     }
 
     const userId = req.user.id;
-    let fileName = room.image; // Default to the existing image
+    let fileName = room.image;
 
     if (req.files && req.files.file) {
       const file = req.files.file;
-      const fileSize = file.data.length;
       const ext = path.extname(file.name);
       fileName = file.md5 + ext;
-      const allowedType = ['.png', '.jpg', '.jpeg'];
+      const fileDestination = `images/rooms/${fileName}`;
+      const fileURL = `https://storage.googleapis.com/${bucketName}/${fileDestination}`;
 
-      if (!allowedType.includes(ext.toLowerCase())) {
-        return res.status(422).json({ msg: "Invalid Images" });
-      }
+      const fileBucket = storage.bucket(bucketName);
+      const fileStream = fileBucket.file(fileDestination).createWriteStream({
+        metadata: {
+          contentType: file.mimetype,
+        },
+      });
 
-      if (fileSize > 5000000) {
-        return res.status(422).json({ msg: "Image must be less than 5 MB" });
-      }
+      fileStream.on('error', (err) => {
+        return res.status(500).json({
+          status: 500,
+          message: err.message,
+        });
+      });
 
-      const filepath = `./public/images/${room.image}`;
-      if (fs.existsSync(filepath)) {
-        fs.unlinkSync(filepath);
-      }
+      fileStream.on('finish', async () => {
+        try {
+          // Hapus file lama di GCS jika berhasil diunggah
+          if (room.image) {
+            const oldFile = fileBucket.file(`images/rooms/${room.image}`);
+            await oldFile.delete().catch((err) => {
+              console.error(`Error deleting old file: ${err.message}`);
+            });
+          }
 
-      file.mv(`./public/images/${fileName}`, (err) => {
-        if (err) return res.status(500).json({ msg: err.message });
+          const updatedRoom = await room.update({
+            name: req.body.name || room.name,
+            description: req.body.description || room.description,
+            price: req.body.price || room.price,
+            numberOfAdults: req.body.numberOfAdults || room.numberOfAdults,
+            numberOfChildren: req.body.numberOfChildren || room.numberOfChildren,
+            bedOption: req.body.bedOption || room.bedOption,
+            mainFacilities: req.body.mainFacilities || room.mainFacilities,
+            popularLocation: req.body.popularLocation || room.popularLocation,
+            checkInCheckOut: req.body.checkInCheckOut || room.checkInCheckOut,
+            roomSize: req.body.roomSize || room.roomSize,
+            image: fileName || room.image,
+            url: fileURL,
+            partnerId: userId,
+          });
+
+          res.status(200).json({
+            msg: "Room Updated Successfully",
+            data: updatedRoom,
+          });
+        } catch (error) {
+          res.status(500).json({
+            status: 500,
+            message: error.message,
+          });
+        }
+      });
+
+      fileStream.end(file.data);
+    } else {
+      // Jika tidak ada file yang diunggah, hanya perbarui data kamar tanpa perubahan gambar
+      const updatedRoom = await room.update({
+        name: req.body.name || room.name,
+        description: req.body.description || room.description,
+        price: req.body.price || room.price,
+        numberOfAdults: req.body.numberOfAdults || room.numberOfAdults,
+        numberOfChildren: req.body.numberOfChildren || room.numberOfChildren,
+        bedOption: req.body.bedOption || room.bedOption,
+        mainFacilities: req.body.mainFacilities || room.mainFacilities,
+        popularLocation: req.body.popularLocation || room.popularLocation,
+        checkInCheckOut: req.body.checkInCheckOut || room.checkInCheckOut,
+        roomSize: req.body.roomSize || room.roomSize,
+        partnerId: userId,
+      });
+
+      res.status(200).json({
+        msg: "Room Updated Successfully",
+        data: updatedRoom,
       });
     }
-
-    const url = fileName
-      ? `${req.protocol}://${req.get("host")}/images/${fileName}`
-      : room.url; // Use the existing URL if no new image is provided
-
-    // Update Room data
-    const updatedRoom = await room.update({
-      name: req.body.name || room.name,
-      description: req.body.description || room.description,
-      price: req.body.price || room.price,
-      numberOfAdults: req.body.numberOfAdults || room.numberOfAdults,
-      numberOfChildren: req.body.numberOfChildren || room.numberOfChildren,
-      bedOption: req.body.bedOption || room.bedOption,
-      mainFacilities: req.body.mainFacilities || room.mainFacilities,
-      popularLocation: req.body.popularLocation || room.popularLocation,
-      checkInCheckOut: req.body.checkInCheckOut || room.checkInCheckOut,
-      roomSize: req.body.roomSize || room.roomSize,
-      image: fileName || room.image,
-      url: url,
-      partnerId: userId,
-    });
-
-    res.status(200).json({
-      msg: "Room Updated Successfully",
-      data: updatedRoom,
-    });
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ msg: "Internal Server Error" });
@@ -225,25 +261,39 @@ const getRankRoom = asyncHandler(async (req, res) => {
   }
 });
 
-const deleteRoom = asyncHandler(async(req, res)=>{
-  const Room = await Room.findOne({
-      where:{
-          id : req.params.id
-      }
+const deleteRoom = asyncHandler(async (req, res) => {
+  const room = await Room.findOne({
+    where: {
+      id: req.params.id,
+    },
   });
-  if(!Room) return res.status(404).json({msg: "No Data Found"});
+
+  if (!room) {
+    return res.status(404).json({ msg: "No Data Found" });
+  }
 
   try {
-      const filepath = `./public/images/${Room.image}`;
-      fs.unlinkSync(filepath);
-      await Room.destroy({
-          where:{
-              id : req.params.id
-          }
+    // Hapus file gambar dari GCS jika ada
+    if (room.image) {
+      const fileBucket = storage.bucket(bucketName);
+      const file = fileBucket.file(`images/rooms/${room.image}`);
+
+      await file.delete().catch((err) => {
+        console.error(`Error deleting file from GCS: ${err.message}`);
       });
-      res.status(200).json({msg: "Room Deleted Successfuly"});
+    }
+
+    // Hapus data kamar
+    await room.destroy({
+      where: {
+        id: req.params.id,
+      },
+    });
+
+    res.status(200).json({ msg: "Room Deleted Successfully" });
   } catch (error) {
-      console.log(error.message);
+    console.log(error.message);
+    res.status(500).json({ msg: "Internal Server Error" });
   }
 });
 

@@ -6,165 +6,16 @@ const Wishlist = require('../../models/likewish/wishlistModel');
 const Sequelize = require('sequelize');
 const path = require('path');
 const fs = require('fs');
+const { Storage } = require('@google-cloud/storage');
+const keyFile = path.join(__dirname, '../../config/cloudKey.json');
+const bucketName = 'capstone-tourism';
+
+const storage = new Storage({
+  projectId: 'starlit-byway-402907',
+  keyFilename: keyFile,
+});
 
 const getCoordinates = async (address) => {
-    const apiKey = 'AIzaSyCiwu99-z18L6lJUcq-8WUG2YtBBT4F3S8';
-    const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
-  
-    try {
-      const response = await fetch(geocodingUrl);
-      const data = await response.json();
-  
-      if (data.status === 'OK' && data.results.length > 0) {
-        const location = data.results[0].geometry.location;
-        return location;
-      } else {
-        res.status(400).json({ message: 'Invalid address or geocoding error' });
-      }
-    } catch (error) {
-      throw new Error(err);
-    }
-  };  
-
-const createPost = asyncHandler(async (req, res) => {
-    const { judul, description, category } = req.body;
-    const {userId} = req.user;
-
-    try{
-    const file = req.files.file;
-    const fileSize = file.size;
-    const ext = path.extname(file.name);
-    const fileName = file.md5 + ext;
-    const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
-    const allowedTypes = [".png", ".jpeg", ".jpg"];
-
-    if (!allowedTypes.includes(ext.toLowerCase())) {
-      return res.status(422).json({
-        status: 422,
-        message: "Invalid image type",
-      });
-    }
-
-    if (fileSize > 5000000) {
-      return res.status(422).json({
-        status: 422,
-        message: "Image must be less than 5MB",
-      });
-    }
-
-    file.mv(`./public/images/${fileName}`, async (err) => {
-      if (err) {
-        return res.status(500).json({
-          status: 500,
-          message: err.message,
-        });
-      }
-    });
-
-    // Validasi input
-    if (!judul || !description || !category) {
-      res.status(400).send({ error: "Data tidak lengkap" });
-      return;
-    }
-  
-    function generatePostId() {
-        const randomString = Math.random().toString(36).substring(7);
-        const orderDate = new Date().toLocaleDateString();
-        return `PST-${randomString}`;
-    }
-
-    const postId = generatePostId();
-    // Buat objek post
-    const post = await Post.create({
-      judul,
-      postId,
-      description,
-      category,
-      coverImage:fileName,
-      url,
-      userId,
-    });
-    res.json({
-        Message:"Post Berhasil Dibuat",
-        post
-    });
-    } catch(error){
-    throw new Error(error);
-    }
-});
-
-const createStep = asyncHandler(async (req, res) => {
-    const { judul, description, address } = req.body;
-    const {postId} = req.params;
-    const {userId} = req.user.id;
-  
-    // Validasi input
-    if (!postId || !judul || !description ) {
-      res.status(400).send({ error: "Data tidak lengkap" });
-      return;
-    }
-  
-    // Unggah gambar
-    const file = req.files.file;
-    const fileSize = file.size;
-    const ext = path.extname(file.name);
-    const fileName = file.md5 + ext;
-    const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
-    const allowedTypes = [".png", ".jpeg", ".jpg"];
-  
-    if (!allowedTypes.includes(ext.toLowerCase())) {
-      return res.status(422).json({
-        status: 422,
-        message: "Invalid image type",
-      });
-    }
-  
-    if (fileSize > 5000000) {
-      return res.status(422).json({
-        status: 422,
-        message: "Image must be less than 5MB",
-      });
-    }
-  
-    file.mv(`./public/images/${fileName}`, async (err) => {
-      if (err) {
-        return res.status(500).json({
-          status: 500,
-          message: err.message,
-        });
-      }
-    });
-  
-    // Dapatkan koordinat geografis alamat
-    const coordinates = await getCoordinates(address);
-  
-    // Jika koordinat geografis tidak ditemukan, berikan kesalahan
-    if (!coordinates) {
-      res.status(400).send({ error: "Alamat tidak ditemukan" });
-      return;
-    }
-  
-    // Buat objek step
-    const step = await Step.create({
-      postId,
-      userId,
-      judul,
-      description,
-      image: fileName,
-      url,
-      address,
-      latitude: coordinates.lat,
-      longitude: coordinates.lng,
-    });
-  
-    // Balas permintaan
-    res.status(200).send(step);
-});
-
-const updateStep = asyncHandler(async (req, res) => {
-  const { postId } = req.params;
-  const { judul, description, address } = req.body;
-
   const apiKey = 'AIzaSyCiwu99-z18L6lJUcq-8WUG2YtBBT4F3S8';
   const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
 
@@ -174,13 +25,164 @@ const updateStep = asyncHandler(async (req, res) => {
 
     if (data.status === 'OK' && data.results.length > 0) {
       const location = data.results[0].geometry.location;
-      const latitude = location.lat;
-      const longitude = location.lng;
+      return location;
+    } else {
+      res.status(400).json({ message: 'Invalid address or geocoding error' });
+    }
+  } catch (error) {
+    throw new Error(err);
+  }
+};
 
-      // Simpan latitude dan longitude dalam model User
-      const stepToUpdate = await Step.findByPk(postId);
+function generatePostId() {
+  const randomString = Math.random().toString(36).substring(7);
+  const orderDate = new Date().toLocaleDateString();
+  return `PST-${randomString}`;
+}
+
+const createPost = asyncHandler(async (req, res) => {
+  const { judul, description, category } = req.body;
+  const { user } = req.user.id;
+  const file = req.files.file;
+  const ext = path.extname(file.name);
+  const fileName = file.md5 + ext;
+  const fileDestination = `images/posts/${fileName}`;
+  const fileURL = `https://storage.googleapis.com/${bucketName}/${fileDestination}`;
+  const fileBucket = storage.bucket(bucketName);
+  const fileStream = fileBucket.file(fileDestination).createWriteStream({
+    metadata: {
+      contentType: file.mimetype,
+    },
+  });
+
+  // Validasi input
+  if (!judul || !description || !category) {
+    res.status(400).send({ error: "Data tidak lengkap" });
+    return;
+  }
+  fileStream.on('error', (err) => {
+    return res.status(500).json({
+      status: 500,
+      message: err.message,
+    });
+  });
+  fileStream.on('finish', async () => {
+    try {
+      const postId = generatePostId();
+      const post = await Post.create({
+        judul,
+        postId,
+        description,
+        category,
+        coverImage: fileName,
+        url: fileURL,
+        userId: user,
+      });
+      res.json({
+        Message: "Post Berhasil Dibuat",
+        post
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: 500,
+        message: error.message,
+      });
+    }
+  });
+  fileStream.end(file.data);
+});
+
+const createStep = asyncHandler(async (req, res) => {
+  const { judul, description, address = null } = req.body;
+  const { postId } = req.params;
+  const { userId } = req.user.id;
+
+  // Validasi input
+  if (!postId || !judul || !description) {
+    res.status(400).send({ error: "Data tidak lengkap" });
+    return;
+  }
+
+  // Unggah gambar
+  const file = req.files.file;
+  const ext = path.extname(file.name);
+  const fileName = file.md5 + ext;
+  const fileDestination = `images/steps/${fileName}`;
+  const fileURL = `https://storage.googleapis.com/${bucketName}/${fileDestination}`;
+
+  const fileBucket = storage.bucket(bucketName);
+  const fileStream = fileBucket.file(fileDestination).createWriteStream({
+    metadata: {
+      contentType: file.mimetype,
+    },
+  });
+
+  fileStream.on('error', (err) => {
+    return res.status(500).json({
+      status: 500,
+      message: err.message,
+    });
+  });
+
+  fileStream.on('finish', async () => {
+    try {
+      // Dapatkan koordinat geografis alamat (jika alamat diberikan)
+      let coordinates = null;
+      if (address) {
+        coordinates = await getCoordinates(address);
+      }
+
+      // Buat objek step
+      const step = await Step.create({
+        postId,
+        userId,
+        judul,
+        description,
+        image: fileName,
+        url: fileURL,
+        address,
+        latitude: coordinates?.lat || null,
+        longitude: coordinates?.lng || null,
+      });
+
+      res.json({
+        message: 'Step has been added',
+        step,
+      });
+    } catch (error) {
+      throw new Error(error);
+    }
+  });
+
+  fileStream.end(file.data);
+});
+
+const updateStep = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { judul, description, address = null } = req.body;
+
+  // Check if address is provided before including it in the geocoding request
+  let geocodingUrl = '';
+  if (address) {
+    const apiKey = 'AIzaSyCiwu99-z18L6lJUcq-8WUG2YtBBT4F3S8';
+    geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
+  }
+
+  try {
+    // If address is provided, fetch geocoding data
+    const data = address ? await fetch(geocodingUrl).then(res => res.json()) : { status: 'OK', results: [] };
+
+    // Adjusted condition for successful geocoding response
+    if ((!address && data.status === 'OK') || (address && data.status === 'OK' && data.results.length > 0)) {
+      const location = data.results[0]?.geometry.location;
+      const latitude = location?.lat || null;
+      const longitude = location?.lng || null;
+
+      // Get the existing step data
+      const stepToUpdate = await Step.findByPk(id);
+
       if (stepToUpdate) {
-        // Update hanya jika data diberikan dalam permintaan
+        // Update only if data is provided in the request
         if (judul) stepToUpdate.judul = judul;
         if (description) stepToUpdate.description = description;
         if (address) {
@@ -189,7 +191,7 @@ const updateStep = asyncHandler(async (req, res) => {
           stepToUpdate.longitude = longitude;
         }
 
-        // Update gambar dan url jika ada
+        // Update image and URL if available
         if (req.files) {
           const file = req.files.file;
           const fileSize = file.data.length;
@@ -198,24 +200,48 @@ const updateStep = asyncHandler(async (req, res) => {
           const allowedType = ['.png', '.jpg', '.jpeg'];
 
           if (allowedType.includes(ext.toLowerCase()) && fileSize <= 5000000) {
-            const filepath = `./public/images/${stepToUpdate.coverImage}`;
+            // Delete old file in GCS if it exists
             if (stepToUpdate.coverImage && stepToUpdate.coverImage !== "null") {
-            fs.unlinkSync(filepath);
+              const oldFile = storage.bucket(bucketName).file(`images/steps/${stepToUpdate.coverImage}`);
+              await oldFile.delete().catch((err) => {
+                console.error(`Error deleting old file: ${err.message}`);
+              });
             }
 
-            file.mv(`./public/images/${fileName}`, (err) => {
-              if (err) return res.status(500).json({ message: err.message });
+            // Upload new file to GCS
+            const fileDestination = `images/steps/${fileName}`;
+            const fileURL = `https://storage.googleapis.com/${bucketName}/${fileDestination}`;
+
+            const fileBucket = storage.bucket(bucketName);
+            const fileStream = fileBucket.file(fileDestination).createWriteStream({
+              metadata: {
+                contentType: file.mimetype,
+              },
             });
 
-            const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
-            stepToUpdate.coverImage = fileName;
-            stepToUpdate.url = url;
+            fileStream.on('error', (err) => {
+              return res.status(500).json({
+                status: 500,
+                message: err.message,
+              });
+            });
+
+            fileStream.on('finish', () => {
+              const url = fileURL;
+              stepToUpdate.coverImage = fileName;
+              stepToUpdate.url = url;
+              stepToUpdate.save();
+            });
+
+            fileStream.end(file.data);
           }
         }
+
+        // Save the updated step data
         await stepToUpdate.save();
-        res.json({ message: 'step data updated successfully', post: stepToUpdate });
+        res.json({ message: 'Step data updated successfully', post: stepToUpdate });
       } else {
-        res.status(404).json({ message: 'step not found' });
+        res.status(404).json({ message: 'Step not found' });
       }
     } else {
       res.status(400).json({ message: 'Invalid address or geocoding error' });
@@ -226,25 +252,34 @@ const updateStep = asyncHandler(async (req, res) => {
   }
 });
 
-const deleteStep = asyncHandler(async(req, res)=>{
-  const Step = await Step.findOne({
-      where:{
-          id : req.params.id
-      }
+const deleteStep = asyncHandler(async (req, res) => {
+  const step = await Step.findOne({
+    where: {
+      id: req.params.id
+    }
   });
-  if(!Step) return res.status(404).json({msg: "No Data Found"});
+  if (!step) return res.status(404).json({ msg: "No Data Found" });
 
   try {
-      const filepath = `./public/images/${Step.image}`;
-      fs.unlinkSync(filepath);
-      await step.destroy({
-          where:{
-              id : req.params.id
-          }
+    // Hapus file gambar dari GCS jika ada
+    if (step.image) {
+      const fileBucket = storage.bucket(bucketName);
+      const file = fileBucket.file(`images/steps/${step.image}`);
+      await file.delete().catch((err) => {
+        console.error(`Error deleting file from GCS: ${err.message}`);
       });
-      res.status(200).json({msg: "Step Deleted Successfuly"});
+    }
+
+    // Hapus data kamar
+    await step.destroy({
+      where: {
+        id: req.params.id,
+      },
+    });
+
+    res.status(200).json({ msg: "Step Deleted Successfully" });
   } catch (error) {
-      console.log(error.message);
+    console.log(error.message);
   }
 });
 
@@ -380,99 +415,133 @@ const wishlistPost = asyncHandler(async (req, res) => {
 const updatePost = asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const { judul, description, category } = req.body;
+  const file = req.files.file;
+  const fileSize = file.data.length;
+  const ext = path.extname(file.name);
+  const fileName = file.md5 + ext;
+  const allowedType = ['.png', '.jpg', '.jpeg'];
+  const fileDestination = `images/posts/${fileName}`;
+  const fileURL = `https://storage.googleapis.com/${bucketName}/${fileDestination}`;
+
+  const fileBucket = storage.bucket(bucketName);
+  const fileStream = fileBucket.file(fileDestination).createWriteStream({
+    metadata: {
+      contentType: file.mimetype,
+    },
+  });
+
+  fileStream.on('error', (err) => {
+    return res.status(500).json({
+      status: 500,
+      message: err.message,
+    });
+  });
   try {
+    // Get the existing post data
+    const postToUpdate = await Post.findOne({
+      where: { postId },
+    });
 
-      // Simpan latitude dan longitude dalam model User
-      const postToUpdate = await Post.findByPk(postId);
-      if (postToUpdate) {
-        // Update hanya jika data diberikan dalam permintaan
-        if (judul) postToUpdate.judul = judul;
-        if (description) postToUpdate.description = description;
-        if (category) postToUpdate.category = category;
+    if (postToUpdate) {
+      // Update only if data is provided in the request
+      if (judul) postToUpdate.judul = judul;
+      if (description) postToUpdate.description = description;
+      if (category) postToUpdate.category = category;
 
-        // Update gambar dan url jika ada
-        if (req.files) {
-          const file = req.files.file;
-          const fileSize = file.data.length;
-          const ext = path.extname(file.name);
-          const fileName = file.md5 + ext;
-          const allowedType = ['.png', '.jpg', '.jpeg'];
+      // Update image and URL if available
+      if (req.files) {
 
-          if (allowedType.includes(ext.toLowerCase()) && fileSize <= 5000000) {
-            const filepath = `./public/images/${postToUpdate.coverImage}`;
-            if (postToUpdate.coverImage && postToUpdate.coverImage !== "null") {
-            fs.unlinkSync(filepath);
-            }
 
-            file.mv(`./public/images/${fileName}`, (err) => {
-              if (err) return res.status(500).json({ message: err.message });
+        if (allowedType.includes(ext.toLowerCase()) && fileSize <= 5000000) {
+          // Delete old file in GCS if it exists
+          if (postToUpdate.coverImage && postToUpdate.coverImage !== "null") {
+            const oldFile = storage.bucket(bucketName).file(`images/posts/${postToUpdate.coverImage}`);
+            await oldFile.delete().catch((err) => {
+              console.error(`Error deleting old file: ${err.message}`);
             });
-
-            const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
+          }
+          fileStream.on('finish', () => {
+            url = fileURL;
             postToUpdate.coverImage = fileName;
             postToUpdate.url = url;
-          
+            postToUpdate.save();
+          });
         }
-        await postToUpdate.save();
-        res.json({ message: 'Post data updated successfully', post: postToUpdate });
-      } else {
-        res.status(404).json({ message: 'Post not found' });
       }
+
+      // Save the updated post data
+      await postToUpdate.save();
+      res.json({ message: 'Post data updated successfully', post: postToUpdate });
+    } else {
+      res.status(404).json({ message: 'Post not found' });
     }
   } catch (error) {
-    console.error('Geocoding error:', error);
+    console.error('Error updating post:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
+  fileStream.end(file.data);
 });
 
-const deletePostById = asyncHandler(async(req, res)=>{
+// Belum gw coba 
+const deletePostById = asyncHandler(async (req, res) => {
   const postId = req.params.postId;
+  // Temukan semua langkah yang terkait dengan post
+  const steps = await Step.findAll({
+    where: {
+      postId: postId,
+    },
+  });
 
-  try {
-    const post = await Post.findByPk(postId);
-
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
+  // Hapus gambar dari Google Cloud Storage untuk setiap langkah yang memiliki gambar
+  const fileBucket = storage.bucket(bucketName);
+  for (const step of steps) {
+    if (step.image) {
+      const file = fileBucket.file(`images/steps/${step.image}`);
+      await file.delete().catch((err) => {
+        console.error(`Error deleting file from GCS: ${err.message}`);
+      });
     }
-
-    await post.destroy();
-
-    return res.status(200).json({ message: 'Post deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting post:', error);
-    return res.status(500).json({ message: 'Error deleting post' });
   }
-});
-// const deletePost = asyncHandler(async(req, res)=>{
-//   const post = await Post.findOne({
-//       where:{
-//           postId : req.params.postId
-//       }
-//   });
-//   if(!post) return res.status(404).json({msg: "No Data Found"});
 
-//   try {
-//       const filepath = `./public/images/${Post.image}`;
-//       fs.unlinkSync(filepath);
-//       await post.destroy({
-//           where:{
-//               id : req.params.id
-//           }
-//       });
-//       res.status(200).json({msg: "Post Deleted Successfuly"});
-//   } catch (error) {
-//       console.log(error.message);
-//   }
-// });
+  // Hapus semua langkah yang terkait dengan post
+  await Step.destroy({
+    where: {
+      postId: postId,
+    },
+  });
+
+  // Hapus gambar dari Google Cloud Storage untuk post jika ada
+  const post = await Post.findOne({
+    where: {
+      postId: postId,
+    },
+  });
+
+  if (post && post.image) {
+    const postFile = fileBucket.file(`images/posts/${post.image}`);
+    await postFile.delete().catch((err) => {
+      console.error(`Error deleting file from GCS: ${err.message}`);
+    });
+  }
+
+  // Hapus post
+  await Post.destroy({
+    where: {
+      postId: postId,
+    },
+  });
+
+  res.status(200).json({ msg: "Post and associated steps deleted successfully" });
+});
 
 module.exports = {
-    createPost,
-    createStep,
-    updateStep,
-    deleteStep,
-    getPost,
-    likePost,
-    wishlistPost,
-    updatePost,
-    deletePostById,
+  createPost,
+  createStep,
+  updateStep,
+  deleteStep,
+  getPost,
+  likePost,
+  wishlistPost,
+  updatePost,
+  deletePostById,
 }

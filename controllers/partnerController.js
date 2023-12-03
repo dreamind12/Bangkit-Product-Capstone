@@ -7,15 +7,20 @@ const Guide = require('../models/product/guideModel');
 const Attraction = require('../models/product/attractionModel');
 const Invoice = require('../models/payment/invoiceModel');
 const Rating = require('../models/payment/ratingModel');
-const Booking = require('../models/payment/bookingModel');
-const bookGuide = require('../models/payment/bookGuideModel');
-const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const path = require('path');
 const fs = require('fs');
 const cookie = require("cookie");
 const Sequelize = require('sequelize');
+const { Storage } = require('@google-cloud/storage');
+const keyFile = path.join(__dirname, '../../config/cloudKey.json');
+const bucketName = 'capstone-tourism';
+
+const storage = new Storage({
+  projectId: 'starlit-byway-402907',
+  keyFilename: keyFile,
+});
 
 const createPartner = asyncHandler(async (req, res) => {
   const { username, email, mobile, password, address, description } = req.body;
@@ -33,35 +38,26 @@ const createPartner = asyncHandler(async (req, res) => {
       const longitude = location.lng;
 
       const file = req.files.file;
-      const fileSize = file.size;
       const ext = path.extname(file.name);
       const fileName = file.md5 + ext;
-      const url = `${req.protocol}://${req.get("host")}/profiles/${fileName}`;
-      const allowedTypes = [".png", ".jpeg", ".jpg"];
+      const fileDestination = `images/partners/${fileName}`;
+      const fileURL = `https://storage.googleapis.com/${bucketName}/${fileDestination}`;
 
-      if (!allowedTypes.includes(ext.toLowerCase())) {
-        return res.status(422).json({
-          status: 422,
-          message: "Invalid image type",
-        });
-      }
-
-      if (fileSize > 5000000) {
-        return res.status(422).json({
-          status: 422,
-          message: "Image must be less than 5MB",
-        });
-      }
-
-      file.mv(`./public/profiles/${fileName}`, async (err) => {
-        if (err) {
-          return res.status(500).json({
-            status: 500,
-            message: err.message,
-          });
-        }
+      const fileBucket = storage.bucket(bucketName);
+      const fileStream = fileBucket.file(fileDestination).createWriteStream({
+        metadata: {
+          contentType: file.mimetype,
+        },
       });
 
+      fileStream.on('error', (err) => {
+        return res.status(500).json({
+          status: 500,
+          message: err.message,
+        });
+      });
+
+      fileStream.on('finish', async () => {
       const createPartner = await Partner.create({
         username,
         email,
@@ -71,7 +67,7 @@ const createPartner = asyncHandler(async (req, res) => {
         address,
         description,
         profileImage: fileName,
-        url,
+        url: fileURL,
         latitude,
         longitude,
       });
@@ -80,6 +76,7 @@ const createPartner = asyncHandler(async (req, res) => {
         message: 'Partner Account Has Been Created',
         createPartner,
       });
+      });      
     } else {
       res.status(400).json({ message: 'Invalid address or geocoding error' });
     }
@@ -89,6 +86,7 @@ const createPartner = asyncHandler(async (req, res) => {
       message: error.message,
     });
   }
+  fileStream.end(file.createPartner);
 });
 
 const loginPartner = asyncHandler(async (req, res) => {
@@ -191,42 +189,75 @@ const updatePartner = asyncHandler(async (req, res) => {
       const latitude = location.lat;
       const longitude = location.lng;
 
-      // Simpan latitude dan longitude dalam model Partner
+      // Get the existing partner data
       const partner = await Partner.findByPk(id);
+
       if (partner) {
+        // Update latitude, longitude, and other fields
         partner.latitude = latitude;
         partner.longitude = longitude;
         partner.username = username;
         partner.email = email;
         partner.mobile = mobile;
-        // Periksa apakah password diperbarui
+
+        // Check if the password is updated
         if (password) {
           const saltRounds = 10;
           const salt = await bcrypt.genSalt(saltRounds);
           const hashedPassword = await bcrypt.hash(password, salt);
           partner.password = hashedPassword;
         }
+
         partner.address = address;
         partner.description = description;
 
-        // Update gambar profileImage dan url jika ada
+        // Update profileImage and URL if available
         if (req.files) {
           const file = req.files.file;
           const fileSize = file.data.length;
           const ext = path.extname(file.name);
           const fileName = file.md5 + ext;
           const allowedType = ['.png', '.jpg', '.jpeg'];
+
           if (allowedType.includes(ext.toLowerCase()) && fileSize <= 5000000) {
-            const filepath = `./public/profiles/${partner.profileImage}`;
-            fs.unlinkSync(filepath);
-            file.mv(`./public/profiles/${fileName}`, (err) => {
-              if (err) return res.status(500).json({ message: err.message });
+            // Delete old file in GCS if it exists
+            if (partner.profileImage && partner.profileImage !== "null") {
+              const oldFile = storage.bucket(bucketName).file(`images/partners/${partner.profileImage}`);
+              await oldFile.delete().catch((err) => {
+                console.error(`Error deleting old file: ${err.message}`);
+              });
+            }
+
+            // Upload new file to GCS
+            const fileDestination = `images/partners/${fileName}`;
+            const fileURL = `https://storage.googleapis.com/${bucketName}/${fileDestination}`;
+
+            const fileBucket = storage.bucket(bucketName);
+            const fileStream = fileBucket.file(fileDestination).createWriteStream({
+              metadata: {
+                contentType: file.mimetype,
+              },
             });
-            const url = `${req.protocol}://${req.get("host")}/profiles/${fileName}`;
-            partner.profileImage = fileName;
-            partner.url = url;
+
+            fileStream.on('error', (err) => {
+              return res.status(500).json({
+                status: 500,
+                message: err.message,
+              });
+            });
+
+            fileStream.on('finish', () => {
+              const url = fileURL;
+              partner.profileImage = fileName;
+              partner.url = url;
+              partner.save();
+            });
+
+            fileStream.end(file.data);
           }
         }
+
+        // Save the updated partner data
         await partner.save();
         res.json({ message: 'Partner data updated successfully', partner });
       } else {

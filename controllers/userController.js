@@ -8,13 +8,19 @@ const Rating = require('../models/payment/ratingModel');
 const Wishlist = require('../models/likewish/wishlistModel');
 const asyncHandler = require('express-async-handler');
 const { generateToken } = require("../config/jwtToken");
-const { generateRefreshToken } = require("../config/refreshToken");
-const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const path = require('path');
-const fs = require('fs');
 const cookie = require("cookie");
+const { Storage } = require('@google-cloud/storage');
+const Sequelize = require('sequelize');
+const keyFile = path.join(__dirname, '../config/cloudKey.json');
+const bucketName = 'capstone-tourism';
+
+const storage = new Storage({
+  projectId: 'starlit-byway-402907',
+  keyFilename: keyFile,
+});
 
 const createUser = asyncHandler(async (req, res) => {
   const { username, email, mobile, password } = req.body;
@@ -36,7 +42,6 @@ try {
     });
   }
 });
-
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
   const findUser = await user.findOne({ where: { email } });
@@ -92,70 +97,103 @@ const getAllUser = asyncHandler(async (req, res) => {
 
 const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { username, email, mobile, password, address, description } = req.body;
+  const { username, email, mobile, password, address = null, description } = req.body;
 
   const apiKey = 'AIzaSyCiwu99-z18L6lJUcq-8WUG2YtBBT4F3S8';
   const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
 
   try {
-    const response = await fetch(geocodingUrl);
-    const data = await response.json();
+    // Attempt to fetch geocoding data if address is provided
+    let latitude = null;
+    let longitude = null;
+    if (address) {
+      const response = await fetch(geocodingUrl);
+      const data = await response.json();
 
-    if (data.status === 'OK' && data.results.length > 0) {
-      const location = data.results[0].geometry.location;
-      const latitude = location.lat;
-      const longitude = location.lng;
-
-      // Simpan latitude dan longitude dalam model User
-      const userToUpdate = await user.findByPk(id);
-      if (userToUpdate) {
-        // Update hanya jika data diberikan dalam permintaan
-        if (username) userToUpdate.username = username;
-        if (email) userToUpdate.email = email;
-        if (mobile) userToUpdate.mobile = mobile;
-        if (password) {
-          const saltRounds = 10;
-          const salt = await bcrypt.genSalt(saltRounds);
-          const hashedPassword = await bcrypt.hash(password, salt);
-          userToUpdate.password = hashedPassword;
-        }
-        if (address) {
-          userToUpdate.address = address;
-          userToUpdate.latitude = latitude;
-          userToUpdate.longitude = longitude;
-        }
-        if (description) userToUpdate.description = description;
-
-        // Update gambar profileImage dan url jika ada
-        if (req.files) {
-          const file = req.files.file;
-          const fileSize = file.data.length;
-          const ext = path.extname(file.name);
-          const fileName = file.md5 + ext;
-          const allowedType = ['.png', '.jpg', '.jpeg'];
-
-          if (allowedType.includes(ext.toLowerCase()) && fileSize <= 5000000) {
-            const filepath = `./public/profiles/${userToUpdate.profileImage}`;
-            if (userToUpdate.profileImage && userToUpdate.profileImage !== "null") {
-            fs.unlinkSync(filepath);
-            }
-
-            file.mv(`./public/profiles/${fileName}`, (err) => {
-              if (err) return res.status(500).json({ message: err.message });
-            });
-
-            const url = `${req.protocol}://${req.get("host")}/profiles/${fileName}`;
-            userToUpdate.profileImage = fileName;
-            userToUpdate.url = url;
-          }
-        }
-        await userToUpdate.save();
-        res.json({ message: 'User data updated successfully', user: userToUpdate });
-      } else {
-        res.status(404).json({ message: 'User not found' });
+      if (data.status === 'OK' && data.results.length > 0) {
+        const location = data.results[0].geometry.location;
+        latitude = location.lat;
+        longitude = location.lng;
       }
+    }
+
+    // Get the existing user data
+    const userToUpdate = await user.findByPk(id);
+
+    if (userToUpdate) {
+      // Update only if data is provided in the request
+      if (username) userToUpdate.username = username;
+      if (email) userToUpdate.email = email;
+      if (mobile) userToUpdate.mobile = mobile;
+
+      if (password) {
+        const saltRounds = 10;
+        const salt = await bcrypt.genSalt(saltRounds);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        userToUpdate.password = hashedPassword;
+      }
+
+      if (address) {
+        userToUpdate.address = address;
+      }
+
+      // Optionally update latitude and longitude if address is provided and valid
+      if (latitude && longitude) {
+        userToUpdate.latitude = latitude;
+        userToUpdate.longitude = longitude;
+      }
+
+      if (description) userToUpdate.description = description;
+
+      // Update profileImage and URL if available
+      if (req.files) {
+        const file = req.files.file;
+        const ext = path.extname(file.name);
+        const fileName = file.md5 + ext;
+        const allowedType = ['.png', '.jpg', '.jpeg'];
+
+        if (allowedType.includes(ext.toLowerCase())) {
+          // Delete old file in GCS if it exists
+          if (userToUpdate.profileImage && userToUpdate.profileImage !== "null") {
+            const oldFile = storage.bucket(bucketName).file(`profiles/${userToUpdate.profileImage}`);
+            await oldFile.delete().catch((err) => {
+              console.error(`Error deleting old file: ${err.message}`);
+            });
+          }
+
+          // Upload new file to GCS
+          const fileDestination = `profiles/${fileName}`;
+          const fileURL = `https://storage.googleapis.com/${bucketName}/${fileDestination}`;
+
+          const fileBucket = storage.bucket(bucketName);
+          const fileStream = fileBucket.file(fileDestination).createWriteStream({
+            metadata: {
+              contentType: file.mimetype,
+            },
+          });
+
+          fileStream.on('error', (err) => {
+            return res.status(500).json({
+              status: 500,
+              message: err.message,
+            });
+          });
+
+          fileStream.on('finish', () => {
+            userToUpdate.profileImage = fileName;
+            userToUpdate.url = fileURL;
+            userToUpdate.save();
+          });
+
+          fileStream.end(file.data);
+        }
+      }
+
+      // Save the updated user data
+      await userToUpdate.save();
+      res.json({ message: 'User data updated successfully', user: userToUpdate });
     } else {
-      res.status(400).json({ message: 'Invalid address or geocoding error' });
+      res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
     console.error('Geocoding error:', error);
@@ -204,7 +242,6 @@ const cookiePreference = asyncHandler(async (req, res) => {
     return res.render("User/choose-preference");
   }
 });
-
 
 const searchAll = asyncHandler(async (req, res) => {
   try {
@@ -285,6 +322,34 @@ const searchAll = asyncHandler(async (req, res) => {
     //   ],
     // });
     // searchResults.push(...postSearchResults);
+
+    res.json({
+      message: 'Hasil pencarian',
+      searchResults,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const search = asyncHandler(async(req,res)=>{
+  const keyword = req.query.keyword;
+  const searchResults = [];
+  try {
+    const postSearchResults = await Post.findAll({
+      where: {
+        judul: {
+          [Sequelize.Op.like]: `%${keyword}%`,
+        },
+      },
+      include: [
+        {
+          model: user,
+          attributes: ['username', 'profileImage', 'url'],
+        },
+      ],
+    });
+    searchResults.push(...postSearchResults);
 
     res.json({
       message: 'Hasil pencarian',
@@ -567,4 +632,5 @@ module.exports = {
   addRating,
   getAllWishlists,
   logoutUser,
+  search
 }

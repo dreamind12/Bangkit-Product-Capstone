@@ -7,8 +7,15 @@ const Invoice = require('../../models/payment/invoiceModel');
 const Like = require('../../models/likewish/likeModel');
 const Wishlist = require('../../models/likewish/wishlistModel');
 const path = require('path');
-const {Op,Sequelize} = require('sequelize');
-const fs = require('fs');
+const {Sequelize} = require('sequelize');
+const { Storage } = require('@google-cloud/storage');
+const keyFile = path.join(__dirname, '../../config/cloudKey.json');
+const bucketName = 'capstone-tourism';
+
+const storage = new Storage({
+  projectId: 'starlit-byway-402907',
+  keyFilename: keyFile,
+});
 
 const addAttraction = asyncHandler(async (req, res) => {
   const userId = req.user.id;
@@ -16,29 +23,25 @@ const addAttraction = asyncHandler(async (req, res) => {
   const fileSize = file.size;
   const ext = path.extname(file.name);
   const fileName = file.md5 + ext;
-  const url = `${req.protocol}://${req.get("host")}/images/${fileName}`;
-  const allowedTypes = ['.png', '.jpeg', '.jpg'];
-  if (!allowedTypes.includes(ext.toLowerCase())) {
-    return res.status(422).json({
-      status: 422,
-      message: 'Invalid image type',
-    });
-  }
-  if (fileSize > 5000000) {
-    return res.status(422).json({
-      status: 422,
-      message: 'Image must be less than 5MB',
-    });
-  }
+  const fileDestination = `images/rooms/${fileName}`;
+  const fileURL = `https://storage.googleapis.com/${bucketName}/${fileDestination}`;
 
-  file.mv(`./public/images/${fileName}`, async (err) => {
-    if (err) {
-      return res.status(500).json({
-        status: 500,
-        message: err.message
-      });
-    }
-  try {
+  const fileBucket = storage.bucket(bucketName);
+  const fileStream = fileBucket.file(fileDestination).createWriteStream({
+    metadata: {
+      contentType: file.mimetype,
+    },
+  });
+
+  fileStream.on('error', (err) => {
+    return res.status(500).json({
+      status: 500,
+      message: err.message,
+    });
+  });
+
+  fileStream.on('finish', async () => {
+    try {
       const data = await Attraction.create({
         name: req.body.name,
         description: req.body.description,
@@ -62,88 +65,135 @@ const addAttraction = asyncHandler(async (req, res) => {
     });
   }
   });
+  fileStream.end(file.data);
 });
 
-const updateAttraction= asyncHandler(async (req, res) => {
-try {
-    const attract = await Attraction.findOne({
-      where: {
-        id: req.params.id
-      }
-    });
-    if (!attract) {
-      return res.status(404).json({ msg: "No Data Found" });
-    }
-    const userId = req.user.id;
-    let fileName = attract.image;
-
-    if (req.files && req.files.file) {
-      const file = req.files.file;
-      const fileSize = file.data.length;
-      const ext = path.extname(file.name);
-      fileName = file.md5 + ext;
-      const allowedType = ['.png', '.jpg', '.jpeg'];
-
-      if (!allowedType.includes(ext.toLowerCase())) {
-        return res.status(422).json({ msg: "Invalid Images" });
-      }
-
-      if (fileSize > 5000000) {
-        return res.status(422).json({ msg: "Image must be less than 5 MB" });
-      }
-
-      const filepath = `./public/images/${attract.image}`;
-      if (fs.existsSync(filepath)) {
-        fs.unlinkSync(filepath);
-      }
-
-      file.mv(`./public/images/${fileName}`, (err) => {
-        if (err) return res.status(500).json({ msg: err.message });
-      });
-    }
-
-    const url = fileName
-      ? `${req.protocol}://${req.get("host")}/images/${fileName}`
-      : attract.url; // Use the existing URL if no new image is provided
-
-      const updatedGuide = await Attraction.update(
-        {
-          name: req.body.name || attract.name,
-          description: req.body.description || attract.description,
-          price: req.body.price || attract.price,
-          duration: req.body.duration || attract.duration,
-          mainFacilities: req.body.mainFacilities || attract.mainFacilities,
-          features: req.body.features || attract.features,
-          image: fileName || attract.image,
-          url: url,
-          partnerId: userId,
-        },
-        {
-          where: {
-            id: req.params.id,
-          },
+const updateAttraction = asyncHandler(async (req, res) => {
+    try {
+      const attract = await Attraction.findOne({
+        where: {
+          id: req.params.id
         }
-      );
-      
-      // Check if the update was successful and return the updated data
-      if (updatedGuide[0] === 1) {
-        const updatedData = await Attraction.findOne({
-          where: {
-            id: req.params.id,
+      });
+      if (!attract) {
+        return res.status(404).json({ msg: "No Data Found" });
+      }
+      const userId = req.user.id;
+      let fileName = attract.image;
+  
+      if (req.files && req.files.file) {
+        const file = req.files.file;
+        const ext = path.extname(file.name);
+        fileName = file.md5 + ext;
+  
+        const fileDestination = `images/attractions/${fileName}`;
+        const fileURL = `https://storage.googleapis.com/${bucketName}/${fileDestination}`;
+  
+        const fileBucket = storage.bucket(bucketName);
+        const fileStream = fileBucket.file(fileDestination).createWriteStream({
+          metadata: {
+            contentType: file.mimetype,
           },
         });
-        res.status(200).json({
-          msg: "Attraction Updated Successfully",
-          data: updatedData,
+  
+        fileStream.on('error', (err) => {
+          return res.status(500).json({
+            status: 500,
+            message: err.message,
+          });
         });
+  
+        fileStream.on('finish', async () => {
+          try {
+            // Delete old file in GCS if successfully uploaded
+            if (attract.image) {
+              const oldFile = fileBucket.file(`images/attractions/${attract.image}`);
+              await oldFile.delete().catch((err) => {
+                console.error(`Error deleting old file: ${err.message}`);
+              });
+            }
+  
+            const updatedAttraction = await Attraction.update(
+              {
+                name: req.body.name || attract.name,
+                description: req.body.description || attract.description,
+                price: req.body.price || attract.price,
+                duration: req.body.duration || attract.duration,
+                mainFacilities: req.body.mainFacilities || attract.mainFacilities,
+                features: req.body.features || attract.features,
+                image: fileName || attract.image,
+                url: fileURL, // Update the URL with the new GCS URL
+                partnerId: userId,
+              },
+              {
+                where: {
+                  id: req.params.id,
+                },
+              }
+            );
+  
+            // Check if the update was successful and return the updated data
+            if (updatedAttraction[0] === 1) {
+              const updatedData = await Attraction.findOne({
+                where: {
+                  id: req.params.id,
+                },
+              });
+              res.status(200).json({
+                msg: "Attraction Updated Successfully",
+                data: updatedData,
+              });
+            } else {
+              res.status(400).json({ message: 'Invalid address or geocoding error' });
+            }
+          } catch (error) {
+            res.status(500).json({
+              status: 500,
+              message: error.message,
+            });
+          }
+        });
+  
+        fileStream.end(file.data);
       } else {
-        res.status(400).json({ message: 'Invalid address or geocoding error' });
-      }    
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ msg: "Internal Server Error" });
-  }
-});
+        // If no file is uploaded, only update attraction data without changing the image
+        const updatedAttraction = await Attraction.update(
+          {
+            name: req.body.name || attract.name,
+            description: req.body.description || attract.description,
+            price: req.body.price || attract.price,
+            duration: req.body.duration || attract.duration,
+            mainFacilities: req.body.mainFacilities || attract.mainFacilities,
+            features: req.body.features || attract.features,
+            partnerId: userId,
+          },
+          {
+            where: {
+              id: req.params.id,
+            },
+          }
+        );
+  
+        // Check if the update was successful and return the updated data
+        if (updatedAttraction[0] === 1) {
+          const updatedData = await Attraction.findOne({
+            where: {
+              id: req.params.id,
+            },
+          });
+          res.status(200).json({
+            msg: "Attraction Updated Successfully",
+            data: updatedData,
+          });
+        } else {
+          res.status(400).json({ message: 'Invalid address or geocoding error' });
+        }
+      }
+    } catch (error) {
+      console.log(error.message);
+      res.status(500).json({ msg: "Internal Server Error" });
+    }
+}); 
 
 const getAttraction = asyncHandler(async (req, res) => {
     const { id } = req.params;
@@ -229,20 +279,26 @@ const getTopAttract = asyncHandler(async (req, res) => {
 });
 
 const deleteAttraction = asyncHandler(async(req, res)=>{
-  const Guide = await Attraction.findOne({
+  const attract = await Attraction.findOne({
       where:{
           id : req.params.id
       }
   });
-  if(!Guide) return res.status(404).json({msg: "No Data Found"});
+  if(!attract) return res.status(404).json({msg: "No Data Found"});
 
   try {
-      const filepath = `./public/images/${Guide.image}`;
-      fs.unlinkSync(filepath);
-      await Attraction.destroy({
-          where:{
-              id : req.params.id
-          }
+      if(attract.image){
+        const fileBucket = storage.bucket(bucketName);
+      const file = fileBucket.file(`images/guides/${guide.image}`);
+
+      await file.delete().catch((err) => {
+        console.error(`Error deleting file from GCS: ${err.message}`);
+      });
+      }
+      await attract.destroy({
+        where: {
+          id: req.params.id,
+        },
       });
       res.status(200).json({msg: "Attraction Deleted Successfuly"});
   } catch (error) {
