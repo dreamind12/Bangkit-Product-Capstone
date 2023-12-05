@@ -216,14 +216,18 @@ const choosePreference = asyncHandler(async (req, res) => {
     }
   }
 
-  const user = await users.findOne({
+  const User = await user.findOne({
     where: {
       id: req.user.id,
     },
   });
 
-  user.preference = preference;
-  await user.save();
+  if (!User) {
+    return res.status(404).send({ error: 'User not found' });
+  }
+
+  User.preference = preference;
+  await User.save();
 
   // Set cookie has_chosen_preference
   res.cookie("has_chosen_preference", "true", {
@@ -231,7 +235,7 @@ const choosePreference = asyncHandler(async (req, res) => {
   });
 
   res.json({
-    user
+    User
   });
 });
 
@@ -239,9 +243,10 @@ const cookiePreference = asyncHandler(async (req, res) => {
   const hasChosenPreference = req.cookies.has_chosen_preference === "true";
   if (!hasChosenPreference) {
     // Tampilkan form untuk memilih Preference
-    return res.render("User/choose-preference");
+    return res.render("user/choose-preference");
   }
 });
+
 
 const searchAll = asyncHandler(async (req, res) => {
   try {
