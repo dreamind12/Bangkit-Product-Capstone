@@ -1,7 +1,7 @@
 const express = require('express');
 const { createUser, loginUser, logoutUser, getUser, getAllUser, updateUser, choosePreference, addRating, getDetailInvoice, getAllInvoice, searchAll, getAllWishlists, search } = require('../controllers/userController');
 const { authMiddleware, isUser } = require('../middlewares/authMiddleware');
-const { createPost, createStep, getPost, getStep, getPostWithSteps, likePost, wishlistPost, updatePost ,deletePostById, updateStep } = require('../controllers/posts/postController');
+const { createPost, createStep, getPost, getStep, getPostWithSteps, likePost, wishlistPost, updatePost ,deletePostById, updateStep, getAllPost, getLikedPost, getRandom, getAllPostUser } = require('../controllers/posts/postController');
 const router = express.Router();
 
 router.post('/register', createUser);
@@ -18,6 +18,10 @@ router.get('/detailInvoice/:invoiceId', authMiddleware, getDetailInvoice);
 router.get('/getAllInvoice', authMiddleware, getAllInvoice);
 router.get('/getAllWishlist', authMiddleware, getAllWishlists);
 router.get('/getPost/:postId', getPost);
+router.get('/getAllPost', getAllPost);
+router.get('/getLikedPost', getLikedPost);
+router.get('/getAllPostUser', authMiddleware, getAllPostUser);
+router.get('/getRandom', getRandom);
 router.get('/searchAll', authMiddleware, searchAll);
 router.get('/search', authMiddleware, search);
 router.put('/update/:id', authMiddleware, updateUser);

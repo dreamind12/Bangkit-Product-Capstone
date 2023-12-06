@@ -1,11 +1,11 @@
 const asyncHandler = require('express-async-handler');
+const User = require('../../models/userModel');
 const Post = require('../../models/post/postModel');
 const Step = require('../../models/post/stepModel');
 const Like = require('../../models/likewish/likeModel');
 const Wishlist = require('../../models/likewish/wishlistModel');
 const Sequelize = require('sequelize');
 const path = require('path');
-const fs = require('fs');
 const { Storage } = require('@google-cloud/storage');
 const keyFile = path.join(__dirname, '../../config/cloudKey.json');
 const bucketName = 'capstone-tourism';
@@ -534,6 +534,91 @@ const deletePostById = asyncHandler(async (req, res) => {
   res.status(200).json({ msg: "Post and associated steps deleted successfully" });
 });
 
+const getAllPost = asyncHandler(async (req, res) => {
+  try {
+    const data = await Post.findAll({
+      include: [
+        {
+          model: User,
+          attributes: ['profileImage', 'url', 'username'],
+        },
+      ],
+    });
+    res.json({
+      message: 'Post telah berhasil di ambil',
+      data,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const getLikedPost = asyncHandler(async (req, res) => {
+  try {
+    const data = await Post.findAll({
+      include: [
+        {
+          model: User,
+          attributes: ['profileImage', 'url', 'username'],
+        },
+      ],
+      order: [[Sequelize.literal('totalLikes'), 'DESC']], // Mengurutkan berdasarkan totalLikes secara descending
+    });
+
+    res.json({
+      message: 'Posts berhasil diambil berdasarkan totalLikes',
+      data,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const getRandom = asyncHandler(async (req, res) => {
+  try {
+    const data = await Post.findAll({
+      include: [
+        {
+          model: User,
+          attributes: ['profileImage', 'url', 'username'],
+        },
+      ],
+      order: Sequelize.literal('RAND()'), // Menggunakan RAND() untuk mengurutkan secara acak
+    });
+
+    res.json({
+      message: 'Post telah berhasil diambil',
+      data,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const getAllPostUser = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const data = await Post.findAll({
+      where: {
+        userId: userId,
+      },
+      include: [
+        {
+          model: User,
+          attributes: ['profileImage', 'url', 'username'],
+        },
+      ],
+    });
+
+    res.json({
+      message: 'Post telah berhasil diambil',
+      data,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 module.exports = {
   createPost,
   createStep,
@@ -544,4 +629,8 @@ module.exports = {
   wishlistPost,
   updatePost,
   deletePostById,
+  getAllPost,
+  getLikedPost,
+  getRandom,
+  getAllPostUser,
 }
