@@ -1,7 +1,7 @@
 const express = require('express');
 const { createUser, loginUser, logoutUser, getUser, getAllUser, updateUser, choosePreference, addRating, getDetailInvoice, getAllInvoice, searchAll, getAllWishlists, search, keywordRecommend } = require('../controllers/userController');
 const { authMiddleware, isUser } = require('../middlewares/authMiddleware');
-const { createPost, createStep, getPost, getStep, getPostWithSteps, likePost, wishlistPost, updatePost ,deletePostById, updateStep, getAllPost, getLikedPost, getRandom, getAllPostUser } = require('../controllers/posts/postController');
+const { createPost, createStep, getPost, getStep, getPostWithSteps, likePost, wishlistPost, updatePost ,deletePostById, updateStep, getAllPost, getLikedPost, getRandom, getAllPostUser , getPostsByUserPreference } = require('../controllers/posts/postController');
 const router = express.Router();
 
 router.post('/register', createUser);
@@ -25,6 +25,7 @@ router.get('/getRandom', getRandom);
 router.get('/searchAll', authMiddleware, searchAll);
 router.get('/search', authMiddleware, search);
 router.get('/recommend', keywordRecommend);
+router.get('/getPostsByUserPreference', getPostsByUserPreference);
 router.put('/update/:id', authMiddleware, updateUser);
 router.put('/update-post/:postId', authMiddleware, updatePost);
 router.put('/post/update-step/:id', authMiddleware, updateStep);

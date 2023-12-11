@@ -651,6 +651,31 @@ const getAllPostUser = asyncHandler(async (req, res) => {
   }
 });
 
+const getPostsByUserPreference = async (userId) => {
+  // Dapatkan user berdasarkan userId
+  const user = await User.findByPk(userId);
+
+  // Jika user tidak ditemukan, kembalikan pesan error
+  if (!user) {
+    throw new Error('User tidak ditemukan');
+  }
+
+  // Dapatkan preferensi user
+  const userPreferences = user.preference;
+
+  // Dapatkan semua post yang kategorinya cocok dengan preferensi user
+  const posts = await Post.findAll({
+    where: {
+      category: {
+        [Sequelize.Op.in]: userPreferences
+      }
+    }
+  });
+
+  return posts;
+};
+
+
 module.exports = {
   createPost,
   createStep,
@@ -665,4 +690,5 @@ module.exports = {
   getLikedPost,
   getRandom,
   getAllPostUser,
+  getPostsByUserPreference,
 }

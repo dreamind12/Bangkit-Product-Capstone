@@ -203,9 +203,11 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 });
 
-const validPreferences = ['wisata alam', 'museum', 'pantai', 'hidden gem'];
+const validPreferences = ['Date', 'Museum', 'Alam', 'Hidden Gem', 'Pantai', 'Rekreasi Spot'
+];
 
 const choosePreference = asyncHandler(async (req, res) => {
+  const userId  = req.user.id;
   const { preference } = req.body;
 
   if (!Array.isArray(preference)) {
@@ -219,9 +221,7 @@ const choosePreference = asyncHandler(async (req, res) => {
   }
 
   const User = await user.findOne({
-    where: {
-      id: req.user.id,
-    },
+    where:userId,
   });
 
   if (!User) {
@@ -240,6 +240,7 @@ const choosePreference = asyncHandler(async (req, res) => {
     User
   });
 });
+
 
 const cookiePreference = asyncHandler(async (req, res) => {
   const hasChosenPreference = req.cookies.has_chosen_preference === "true";
