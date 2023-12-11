@@ -6,6 +6,7 @@ const Post = require('../models/post/postModel');
 const Invoice = require('../models/payment/invoiceModel');
 const Rating = require('../models/payment/ratingModel');
 const Wishlist = require('../models/likewish/wishlistModel');
+// const searchRecomend = require('../models/machineLearning/Search Recommendation/SearchRecommendation.ipynb');
 const asyncHandler = require('express-async-handler');
 const { generateToken } = require("../config/jwtToken");
 const bcrypt = require("bcrypt");
@@ -13,7 +14,7 @@ const jwt = require("jsonwebtoken");
 const path = require('path');
 const cookie = require("cookie");
 const { Storage } = require('@google-cloud/storage');
-const Sequelize = require('sequelize');
+const {Sequelize, Op} = require('sequelize');
 const keyFile = path.join(__dirname, '../config/cloudKey.json');
 const bucketName = 'capstone-tourism';
 
@@ -247,7 +248,6 @@ const cookiePreference = asyncHandler(async (req, res) => {
   }
 });
 
-
 const searchAll = asyncHandler(async (req, res) => {
   try {
     const keyword = req.query.keyword;
@@ -362,6 +362,35 @@ const search = asyncHandler(async(req,res)=>{
     });
   } catch (error) {
     throw new Error(error);
+  }
+});
+
+const keywordRecommend = asyncHandler(async(req,res)=>{
+  try {
+    const keyword = req.query.keyword;
+
+    // Cari Post dikasih limit 5 
+    const recommendedPosts = await Post.findAll({
+      attributes: ['judul'],
+      where: {
+        judul: {
+          [Op.like]: `%${keyword}%`,
+        },
+      },
+      limit: 5,
+    });
+
+    // Mapping semua judul dari model Post
+    const recommendations = recommendedPosts.map((post) => post.judul);
+    res.json({
+      message: 'Keyword Recommendations',
+      recommendations,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: 'Internal Server Error',
+    });
   }
 });
 
@@ -637,5 +666,6 @@ module.exports = {
   addRating,
   getAllWishlists,
   logoutUser,
-  search
+  search,
+  keywordRecommend,
 }
