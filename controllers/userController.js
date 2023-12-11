@@ -43,6 +43,7 @@ try {
     });
   }
 });
+
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
   const findUser = await user.findOne({ where: { email } });
@@ -365,11 +366,11 @@ const search = asyncHandler(async(req,res)=>{
   }
 });
 
-const keywordRecommend = asyncHandler(async(req,res)=>{
+const keywordRecommend = asyncHandler(async (req, res) => {
   try {
     const keyword = req.query.keyword;
 
-    // Cari Post dikasih limit 5 
+    // Cari Post dikasih limit 5 secara acak
     const recommendedPosts = await Post.findAll({
       attributes: ['judul'],
       where: {
@@ -377,6 +378,7 @@ const keywordRecommend = asyncHandler(async(req,res)=>{
           [Op.like]: `%${keyword}%`,
         },
       },
+      order: Sequelize.literal('RAND()'), // Menggunakan RAND() untuk mengurutkan secara acak
       limit: 5,
     });
 
