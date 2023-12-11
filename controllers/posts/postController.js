@@ -42,7 +42,7 @@ function generatePostId() {
 
 const createPost = asyncHandler(async (req, res) => {
   const { judul, description, category } = req.body;
-  const { user } = req.user.id;
+  const user = req.user.id;
   const file = req.files.file;
   const ext = path.extname(file.name);
   const fileName = file.md5 + ext;
@@ -95,7 +95,7 @@ const createPost = asyncHandler(async (req, res) => {
 const createStep = asyncHandler(async (req, res) => {
   const { judul, description, address = null } = req.body;
   const { postId } = req.params;
-  const { userId } = req.user.id;
+  const userId = req.user.id;
 
   // Validasi input
   if (!postId || !judul || !description) {
@@ -103,7 +103,39 @@ const createStep = asyncHandler(async (req, res) => {
     return;
   }
 
-  // Unggah gambar
+  // Cek apakah file diunggah
+  if (!req.files || !req.files.file) {
+    // Jika tidak ada file, buat objek step tanpa melakukan operasi pengungahan
+    try {
+      // Dapatkan koordinat geografis alamat (jika alamat diberikan)
+      let coordinates = null;
+      if (address) {
+        coordinates = await getCoordinates(address);
+      }
+
+      // Buat objek step tanpa gambar
+      const step = await Step.create({
+        postId,
+        userId,
+        judul,
+        description,
+        address,
+        latitude: coordinates?.lat || null,
+        longitude: coordinates?.lng || null,
+      });
+
+      res.json({
+        message: 'Step has been added',
+        step,
+      });
+    } catch (error) {
+      throw new Error(error);
+    }
+
+    return;
+  }
+
+  // Jika ada file, proses seperti biasa
   const file = req.files.file;
   const ext = path.extname(file.name);
   const fileName = file.md5 + ext;
@@ -132,7 +164,7 @@ const createStep = asyncHandler(async (req, res) => {
         coordinates = await getCoordinates(address);
       }
 
-      // Buat objek step
+      // Buat objek step dengan gambar
       const step = await Step.create({
         postId,
         userId,
