@@ -4,7 +4,7 @@ const Post = require('../../models/post/postModel');
 const Step = require('../../models/post/stepModel');
 const Like = require('../../models/likewish/likeModel');
 const Wishlist = require('../../models/likewish/wishlistModel');
-const Sequelize = require('sequelize');
+const {Sequelize, Op} = require('sequelize');
 const path = require('path');
 const { Storage } = require('@google-cloud/storage');
 const keyFile = path.join(__dirname, '../../config/cloudKey.json');
@@ -654,33 +654,22 @@ const getAllPostUser = asyncHandler(async (req, res) => {
 const getPostsByUserPreference = asyncHandler(async (req, res) => {
   try {
     const userId = req.user.id;
-    if (!userId) {
-      throw new Error('User ID tidak ditemukan');
-    }
-
-    // Dapatkan user berdasarkan userId
     const user = await User.findByPk(userId);
-
-    // Jika user tidak ditemukan, kembalikan pesan error
     if (!user) {
       throw new Error('User tidak ditemukan');
     }
 
-    // Dapatkan preferensi user
-    const userPreferences = User.preference;
+    // Pecahin Array Jadi Satuan String 
+    const userPreferences = JSON.parse(user.preference);
+    const preferencesArray = Array.isArray(userPreferences)
+      ? userPreferences
+      : [userPreferences];
 
-    // Pastikan userPreferences adalah array
-    if (!Array.isArray(userPreferences)) {
-      throw new Error('Preferensi pengguna harus dalam bentuk array');
-    }
-
-    // Dapatkan semua post yang kategorinya cocok dengan preferensi user
     const data = await Post.findAll({
       where: {
-        // userId: userId,
         category: {
-          [Sequelize.Op.in]: userPreferences
-        }
+          [Sequelize.Op.in]: preferencesArray,
+        },
       },
       include: [
         {
