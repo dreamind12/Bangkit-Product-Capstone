@@ -651,30 +651,53 @@ const getAllPostUser = asyncHandler(async (req, res) => {
   }
 });
 
-const getPostsByUserPreference = async (userId) => {
-  // Dapatkan user berdasarkan userId
-  const user = await User.findByPk(userId);
-
-  // Jika user tidak ditemukan, kembalikan pesan error
-  if (!user) {
-    throw new Error('User tidak ditemukan');
-  }
-
-  // Dapatkan preferensi user
-  const userPreferences = user.preference;
-
-  // Dapatkan semua post yang kategorinya cocok dengan preferensi user
-  const posts = await Post.findAll({
-    where: {
-      category: {
-        [Sequelize.Op.in]: userPreferences
-      }
+const getPostsByUserPreference = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user.id;
+    if (!userId) {
+      throw new Error('User ID tidak ditemukan');
     }
-  });
 
-  return posts;
-};
+    // Dapatkan user berdasarkan userId
+    const user = await User.findByPk(userId);
 
+    // Jika user tidak ditemukan, kembalikan pesan error
+    if (!user) {
+      throw new Error('User tidak ditemukan');
+    }
+
+    // Dapatkan preferensi user
+    const userPreferences = User.preference;
+
+    // Pastikan userPreferences adalah array
+    if (!Array.isArray(userPreferences)) {
+      throw new Error('Preferensi pengguna harus dalam bentuk array');
+    }
+
+    // Dapatkan semua post yang kategorinya cocok dengan preferensi user
+    const data = await Post.findAll({
+      where: {
+        // userId: userId,
+        category: {
+          [Sequelize.Op.in]: userPreferences
+        }
+      },
+      include: [
+        {
+          model: User,
+          attributes: ['profileImage', 'url', 'username'],
+        },
+      ],
+    });
+
+    res.json({
+      message: 'Post berdasarkan preferensi telah berhasil diambil',
+      data,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
 
 module.exports = {
   createPost,

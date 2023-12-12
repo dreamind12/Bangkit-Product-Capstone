@@ -25,7 +25,7 @@ router.get('/getRandom', getRandom);
 router.get('/searchAll', authMiddleware, searchAll);
 router.get('/search', authMiddleware, search);
 router.get('/recommend', keywordRecommend);
-router.get('/getPostsByUserPreference', getPostsByUserPreference);
+router.get('/getPostsByUserPreference', authMiddleware,getPostsByUserPreference);
 router.put('/update/:id', authMiddleware, updateUser);
 router.put('/update-post/:postId', authMiddleware, updatePost);
 router.put('/post/update-step/:id', authMiddleware, updateStep);
