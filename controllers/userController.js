@@ -655,6 +655,41 @@ const logoutUser = asyncHandler(async(req,res)=>{
   }
 });
 
+const updateTier = async (userId) => {
+  try {
+    // Mengambil jumlah post yang dibuat oleh user
+    const postCount = await Post.count({ where: { userId: userId } });
+
+    let newTier;
+
+    // Mengubah tier berdasarkan jumlah post
+    if (postCount >= 15) {
+      newTier = 'penjelajah handal';
+    } else if (postCount >= 10) {
+      newTier = 'gold';
+    } else if (postCount >= 5) {
+      newTier = 'silver';
+    } else {
+      newTier = 'bronze';
+    }
+
+    // Update tier user
+    const user = await user.findOne({ where: { id: id } });
+    if (!user) {
+      console.log(`User with id ${id} not found`);
+      return;
+    }
+    user.tier = newTier;
+    await user.save();
+
+    console.log(`Tier for user ${id} updated to ${newTier}`);
+  } catch (error) {
+    console.error('Error updating user tier:', error);
+  }
+};
+
+
+
 module.exports = {
   createUser,
   loginUser,
@@ -670,5 +705,6 @@ module.exports = {
   getAllWishlists,
   logoutUser,
   search,
+  updateTier,
   keywordRecommend,
 }
