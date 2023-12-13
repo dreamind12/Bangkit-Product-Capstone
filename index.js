@@ -34,6 +34,6 @@ app.use('/attract', attractRouter);
 app.use('/user', userRoute);
 app.use('/image', imageRoute);
 
-app.listen(PORT, ()=>{
+app.listen(process.env.PORT || PORT, ()=>{
     console.log(`Server Listening on ${PORT}`);
 })

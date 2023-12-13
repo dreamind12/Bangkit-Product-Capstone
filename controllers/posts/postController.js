@@ -677,6 +677,7 @@ const getPostsByUserPreference = asyncHandler(async (req, res) => {
           attributes: ['profileImage', 'url', 'username'],
         },
       ],
+      order: Sequelize.literal('RAND()'),
     });
 
     res.json({
