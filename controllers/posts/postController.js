@@ -6,6 +6,7 @@ const Like = require('../../models/likewish/likeModel');
 const Wishlist = require('../../models/likewish/wishlistModel');
 const {Sequelize, Op} = require('sequelize');
 const path = require('path');
+const tf = require('@tensorflow/tfjs');
 const { Storage } = require('@google-cloud/storage');
 const keyFile = path.join(__dirname, '../../config/cloudKey.json');
 const bucketName = 'capstone-tourism';
@@ -585,6 +586,37 @@ const getAllPost = asyncHandler(async (req, res) => {
   }
 });
 
+const postAll = asyncHandler(async(req,res)=>{
+  const postModel = await tf.loadLayersModel('../../models/machineLearning/Image Classification/post.h5');
+  try {
+    const posts = await Post.findAll({
+      include: [
+        {
+          model: User,
+          attributes: ['profileImage', 'url', 'username'],
+        },
+      ],
+    });
+    for (const post of posts) {
+      const mappedFeatures = {
+        // Mapping Feature To Post 
+        jumlah_like: post.totalLikes,
+        judul_postingan: post.judul,
+        type: post.category,
+      };
+      const prediction = await postModel.predict(mappedFeatures);
+      post.predictedPreferenceScore = prediction; // Add prediction 
+    }
+    posts.sort((post1, post2) => post2.predictedPreferenceScore - post1.predictedPreferenceScore);
+    res.json({
+      message: 'Post telah berhasil di ambil',
+      data: posts,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+})
+
 const getLikedPost = asyncHandler(async (req, res) => {
   try {
     const data = await Post.findAll({
@@ -704,4 +736,5 @@ module.exports = {
   getRandom,
   getAllPostUser,
   getPostsByUserPreference,
+  postAll,
 }
