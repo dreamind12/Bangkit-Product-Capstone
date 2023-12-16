@@ -586,36 +586,36 @@ const getAllPost = asyncHandler(async (req, res) => {
   }
 });
 
-const postAll = asyncHandler(async(req,res)=>{
-  const postModel = await tf.loadLayersModel('../../models/machineLearning/Image Classification/post.h5');
-  try {
-    const posts = await Post.findAll({
-      include: [
-        {
-          model: User,
-          attributes: ['profileImage', 'url', 'username'],
-        },
-      ],
-    });
-    for (const post of posts) {
-      const mappedFeatures = {
-        // Mapping Feature To Post 
-        jumlah_like: post.totalLikes,
-        judul_postingan: post.judul,
-        type: post.category,
-      };
-      const prediction = await postModel.predict(mappedFeatures);
-      post.predictedPreferenceScore = prediction; // Add prediction 
-    }
-    posts.sort((post1, post2) => post2.predictedPreferenceScore - post1.predictedPreferenceScore);
-    res.json({
-      message: 'Post telah berhasil di ambil',
-      data: posts,
-    });
-  } catch (error) {
-    throw new Error(error);
-  }
-})
+// const postAll = asyncHandler(async(req,res)=>{
+//   const postModel = await tf.loadLayersModel('../../models/machineLearning/Image Classification/post.h5');
+//   try {
+//     const posts = await Post.findAll({
+//       include: [
+//         {
+//           model: User,
+//           attributes: ['profileImage', 'url', 'username'],
+//         },
+//       ],
+//     });
+//     for (const post of posts) {
+//       const mappedFeatures = {
+//         // Mapping Feature To Post 
+//         jumlah_like: post.totalLikes,
+//         judul_postingan: post.judul,
+//         type: post.category,
+//       };
+//       const prediction = await postModel.predict(mappedFeatures);
+//       post.predictedPreferenceScore = prediction; // Add prediction 
+//     }
+//     posts.sort((post1, post2) => post2.predictedPreferenceScore - post1.predictedPreferenceScore);
+//     res.json({
+//       message: 'Post telah berhasil di ambil',
+//       data: posts,
+//     });
+//   } catch (error) {
+//     throw new Error(error);
+//   }
+// })
 
 const getLikedPost = asyncHandler(async (req, res) => {
   try {
