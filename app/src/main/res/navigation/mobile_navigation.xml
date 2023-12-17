@@ -18,6 +18,12 @@
         tools:layout="@layout/fragment_wishlist" />
 
     <fragment
+        android:id="@+id/navigation_search"
+        android:name="com.example.tourez.view.menu.ui.search.SearchFragment"
+        android:label="@string/title_search"
+        tools:layout="@layout/fragment_search"/>
+
+    <fragment
         android:id="@+id/navigation_journey"
         android:name="com.example.tourez.view.menu.ui.journey.JourneyFragment"
         android:label="@string/title_journey"
@@ -28,11 +34,5 @@
         android:name="com.example.tourez.view.menu.ui.profile.ProfileFragment"
         android:label="@string/title_profile"
         tools:layout="@layout/fragment_profile"/>
-
-    <fragment
-        android:id="@+id/navigation_imageRec"
-        android:name="com.example.tourez.view.menu.ui.imagerec.ImageRecognationFragment"
-        android:label="@string/title_imageRec"
-        tools:layout="@layout/fragment_image_recognation"/>
 
 </navigation>

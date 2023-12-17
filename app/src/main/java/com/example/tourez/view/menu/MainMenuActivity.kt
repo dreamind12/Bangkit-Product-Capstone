@@ -11,9 +11,7 @@ import com.example.tourez.R
 import com.example.tourez.databinding.ActivityMainMenuBinding
 
 class MainMenuActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityMainMenuBinding
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -23,12 +21,6 @@ class MainMenuActivity : AppCompatActivity() {
         val navView: BottomNavigationView = binding.navView
 
         val navController = findNavController(R.id.nav_host_fragment_activity_main_menu)
-//        val appBarConfiguration = AppBarConfiguration(
-//            setOf(
-//                R.id.navigation_home, R.id.navigation_whislist, R.id.navigation_imageRec,R.id.navigation_journey, R.id.navigation_profile
-//            )
-//        )
-        //setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
     }
 }

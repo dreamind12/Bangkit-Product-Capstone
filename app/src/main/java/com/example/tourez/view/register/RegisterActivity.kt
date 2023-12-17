@@ -25,6 +25,8 @@ class RegisterActivity : AppCompatActivity() {
         val factory : ViewModelFactory = ViewModelFactory.getInstance(this)
         registerViewModel = ViewModelProvider(this, factory)[RegisterViewModel::class.java]
 
+        setupAction()
+
         registerViewModel.registerResponse.observe(this){
             when(it){
                 is Result.Loading -> {
@@ -51,15 +53,6 @@ class RegisterActivity : AppCompatActivity() {
             }
         }
 
-        binding.button.setOnClickListener {
-            binding.apply {
-                val username = binding.edtName.editText.toString().trim()
-                val email = binding.edtEmail.editText.toString().trim()
-                val mobile = binding.edtTelp.editText.toString().trim()
-                val password = binding.edtPassword.editText.toString().trim()
-                registerViewModel.register(username, email, mobile, password)
-            }
-        }
 
         // link balik ke halaman login
         binding.tbLogin.setOnClickListener {
@@ -69,6 +62,23 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
+    // fungsi proses register
+    private fun setupAction(){
+        binding.button.setOnClickListener {
+            binding.apply {
+                if (inputEmail.error.isNullOrEmpty() && inputName.error.isNullOrEmpty()
+                    && inputPassword.error.isNullOrEmpty() && inputPhone.error.isNullOrEmpty()){
+                    val username = inputName.text.toString().trim()
+                    val email = inputEmail.text.toString().trim()
+                    val password = inputPassword.text.toString().trim()
+                    val mobile = inputPhone.text.toString().trim()
+                    registerViewModel.register(username, email, password, mobile)
+                }
+            }
+        }
+    }
+
+    // fungsi menampilkan loading
     private fun showLoading(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.INVISIBLE
     }

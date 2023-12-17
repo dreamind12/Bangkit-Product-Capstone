@@ -12,14 +12,16 @@
         android:title="@string/title_wishlist" />
 
     <item
-        android:id="@+id/navigation_imageRec"
-        android:icon="@drawable/camera"
-        android:title="@string/title_imageRec"/>
+        android:id="@+id/navigation_search"
+        android:icon="@drawable/baseline_search_24"
+        android:title="@string/title_search"/>
+
 
     <item
         android:id="@+id/navigation_journey"
         android:icon="@drawable/journey"
         android:title="@string/title_journey" />
+
 
     <item
         android:id="@+id/navigation_profile"

@@ -2,6 +2,9 @@ package com.example.tourez.data.repository
 
 import androidx.lifecycle.liveData
 import com.example.tourez.data.Result
+import com.example.tourez.data.response.GetAllUserResponse
+import com.example.tourez.data.response.GetRandomPostResponse
+import com.example.tourez.data.response.LoginResponse
 import com.example.tourez.data.response.RegisterResponse
 import com.example.tourez.data.retrofit.ApiService
 import com.example.tourez.pref.UserModel
@@ -14,7 +17,7 @@ class UserRepository private constructor(
     private val userPreference: UserPreference,
     private val apiService: ApiService
 ){
-    suspend fun getSession(): Flow<UserModel>{
+    fun getSession(): Flow<UserModel>{
         return userPreference.getSession()
     }
 
@@ -26,15 +29,45 @@ class UserRepository private constructor(
         userPreference.logout()
     }
 
-    fun register(username: String, email: String, mobile: String, password:String) = liveData<Result<RegisterResponse>>(){
+    fun register(username: String, email: String, password:String, mobile: String) = liveData<Result<RegisterResponse>>(){
         emit(Result.Loading)
         try {
-            val response = apiService.register(username, email, mobile, password)
+            val response = apiService.register(username, email, password, mobile)
             emit(Result.Success(response))
         }catch (e: Exception){
             emit(Result.Error(e.message.toString()))
         }
     }
+
+    fun login(email: String, password: String) = liveData<Result<LoginResponse>>(){
+        emit(Result.Loading)
+        try {
+            val response = apiService.login(email, password)
+            emit(Result.Success(response))
+        }catch (e: Exception){
+            emit(Result.Error(e.message.toString()))
+        }
+    }
+
+    fun getUser(id: String) = liveData<Result<GetAllUserResponse>> {
+        emit(Result.Loading)
+        try {
+            val response = apiService.getUser(id)
+            emit(Result.Success(response))
+        }catch (e: Exception){
+            emit(Result.Error(e.message.toString()))
+        }
+    }
+    fun getRandomPost() = liveData<Result<GetRandomPostResponse>>() {
+        emit(Result.Loading)
+        try {
+            val response = apiService.getAllPost()
+            emit(Result.Success(response))
+        }catch (e: Exception){
+            emit(Result.Error(e.message.toString()))
+        }
+    }
+
 
 
     companion object{

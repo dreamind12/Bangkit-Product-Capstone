@@ -5,9 +5,36 @@
     <string name="title_wishlist">Wishlist</string>
     <string name="title_journey">Journey</string>
     <string name="title_profile">Profile</string>
-    <string name="title_imageRec">Image</string>
+    <string name="title_search">Search</string>
+    <!--        Signin Form         -->
+    <string name="desc_signin">masukkan data untuk buat akun kamu</string>
+    <string name="username">Nama</string>
+    <string name="email">Email</string>
+    <string name="password">Kata sandi</string>
+    <string name="phone">Nomor Hp</string>
+    <string name="have_account">Sudah punya akun?</string>
+    <string name="btn_login">Masuk disini</string>
+    <string name="btn_daftar">Daftar</string>
+
+
+    <!-- Login Form-->
+    <string name="btn_forgot">Lupa Kata sandi?</string>
+    <string name="desc_login">masukkan email dan password</string>
+    <string name="unregistered">Belum punya akun?</string>
+    <string name="btn_register">Buat disini</string>
+    <string name="btn_masuk">Masuk</string>
+
     <string name="title_box">Yeayy</string>
     <string name="message_box">Kamu berhasil daftar</string>
     <string name="gagal_daftar">Kamu gagal daftar</string>
     <string name="next_box">Masuk</string>
+    <string name="email_format">Format emailnya harus benar ya</string>
+    <string name="password_min">Password mu minimal 8 karakter</string>
+
+
+    <!-- Logout confirm -->
+    <string name="message_logout">kamu yakin mau keluar?</string>
+    <string name="say_yes">iya</string>
+    <string name="say_no">ngga</string>
+
 </resources>
