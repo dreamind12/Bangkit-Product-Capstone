@@ -13,5 +13,8 @@ class HomeViewModel(private val userRepository: UserRepository) : ViewModel() {
     }
     fun getRandomPost() = userRepository.getRandomPost()
 
-    fun getUser(id : String) = userRepository.getUser(id)
+    fun getLikedPost() = userRepository.getLikedPost()
+
+
+    fun getUser(id : Int) = userRepository.getDataUser(id)
 }

@@ -8,17 +8,24 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
 
-        <ImageView
-            android:id="@+id/imageView4"
+        <LinearLayout
+            android:id="@+id/linear"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="50dp"
-            android:src="@drawable/upload_image"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_height="250dp"
+            tools:ignore="MissingConstraints">
+
+            <ImageView
+                android:id="@+id/imgPost"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="50dp"
+                android:src="@drawable/upload_image"
+                />
+
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/textView"
@@ -27,7 +34,7 @@
             android:layout_marginTop="40dp"
             android:text="Judul"
             app:layout_constraintStart_toStartOf="@+id/tv_judul"
-            app:layout_constraintTop_toBottomOf="@+id/imageView4" />
+            app:layout_constraintTop_toBottomOf="@+id/linear" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tv_judul"
@@ -36,12 +43,12 @@
             android:layout_height="56dp"
             android:layout_marginTop="5dp"
             android:hint="Judul"
-            app:layout_constraintEnd_toEndOf="@+id/imageView4"
-            app:layout_constraintStart_toStartOf="@+id/imageView4"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/post_title"
+                android:id="@+id/post_judul"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:backgroundTint="@color/white"/>
@@ -66,8 +73,8 @@
             android:layout_height="56dp"
             android:layout_marginTop="5dp"
             android:hint="Kategori"
-            app:layout_constraintEnd_toEndOf="@+id/imageView4"
-            app:layout_constraintStart_toStartOf="@+id/imageView4"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textVie">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -95,8 +102,8 @@
             android:layout_width="312dp"
             android:layout_height="100dp"
             android:layout_marginTop="5dp"
-            app:layout_constraintEnd_toEndOf="@+id/imageView4"
-            app:layout_constraintStart_toStartOf="@+id/imageView4"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_description">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -109,15 +116,24 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <Button
-            android:id="@+id/btn_submit"
-            android:layout_width="142dp"
-            android:layout_height="47dp"
-            android:layout_marginTop="20dp"
-            android:text="Submit"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_deskripsi" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:orientation="vertical"
+            app:layout_constraintTop_toBottomOf="@+id/tv_deskripsi"
+            tools:ignore="MissingConstraints"
+            tools:layout_editor_absoluteX="31dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:layout_width="150dp"
+                android:layout_height="50dp"
+                android:id="@+id/btn_submit"
+                android:layout_gravity="center"
+                android:layout_marginTop="20dp"
+                android:text="Post" />
+
+        </LinearLayout>
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

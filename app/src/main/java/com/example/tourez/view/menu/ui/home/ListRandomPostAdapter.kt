@@ -25,11 +25,16 @@ class ListRandomPostAdapter:ListAdapter<DataItem, ListRandomPostAdapter.PostRand
         }
     }
 
+    override fun getItemCount(): Int {
+        val limit = 5
+        return Math.min(10, limit)
+    }
+
     inner class PostRandomViewHolder(val binding: ItemRandomBinding): RecyclerView.ViewHolder(binding.root) {
         fun bind(randomPost: DataItem){
             binding.apply {
                 Glide.with(itemView)
-                    .load(randomPost.coverImage)
+                    .load(randomPost.url)
                     .centerCrop()
                     .into(ivRandomPost)
             }

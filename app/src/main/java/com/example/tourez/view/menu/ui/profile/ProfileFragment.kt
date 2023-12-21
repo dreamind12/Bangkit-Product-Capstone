@@ -6,10 +6,12 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
+import com.bumptech.glide.Glide
 import com.example.tourez.R
+import com.example.tourez.data.Result
 import com.example.tourez.data.ViewModelFactory
+import com.example.tourez.data.response.GetUserResponse
 import com.example.tourez.databinding.FragmentProfileBinding
 import com.example.tourez.view.login.LoginActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -46,7 +48,36 @@ class ProfileFragment : Fragment() {
             }
         }
 
+        getDataUser(id)
+
         return root
+    }
+
+    fun setDataUser(dataUserResponse: GetUserResponse){
+        binding.tvUsername.text = dataUserResponse.getusers?.username
+        Glide.with(requireActivity())
+            .load(dataUserResponse.getusers?.url)
+            .into(binding.imageView)
+        binding.tvMoto.text = dataUserResponse.getusers?.email
+    }
+
+    fun getDataUser(id: Int){
+        viewModel.getDataUser(id).observe(viewLifecycleOwner){
+            if (it != null){
+                when(it){
+                    is Result.Loading -> {
+                        //loading
+                    }
+                    is Result.Success -> {
+                        // loading stop
+                        setDataUser(it.data)
+                    }
+                    is Result.Error -> {
+                        // kalo error
+                    }
+                }
+            }
+        }
     }
 
 }

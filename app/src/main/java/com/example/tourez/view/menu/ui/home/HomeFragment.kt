@@ -13,11 +13,16 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.example.tourez.data.Result
 import com.example.tourez.data.ViewModelFactory
 import com.example.tourez.data.response.DataItem
+import com.example.tourez.data.response.GetUserResponse
+import com.example.tourez.data.response.Getusers
+import com.example.tourez.data.response.User
 import com.example.tourez.databinding.FragmentHomeBinding
 import com.example.tourez.view.login.LoginActivity
+import com.example.tourez.view.menu.ui.grid.GridPostRecomendation
 import com.example.tourez.view.menu.ui.profile.ProfileFragment
 import java.util.Arrays
 
@@ -38,12 +43,31 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val layoutManager = LinearLayoutManager(requireActivity())
+        val layoutManager = LinearLayoutManager(requireActivity(), LinearLayoutManager.HORIZONTAL, false)
         binding.randomPost.layoutManager = layoutManager
 
-        getRandomPost()
+        val layoutManager2 = LinearLayoutManager(requireActivity(), LinearLayoutManager.HORIZONTAL, false)
+        binding.rvRecomendation.layoutManager = layoutManager2
 
-        showPreference()
+        val layoutManager3 = LinearLayoutManager(requireActivity(), LinearLayoutManager.HORIZONTAL, false)
+        binding.rvTopPost.layoutManager = layoutManager3
+
+        getRandomPost()
+        getRecomendationPost()
+        getTopPost()
+
+        //showPreference()
+
+        binding.allRecomendation.setOnClickListener {
+            val intent = Intent(requireActivity(), GridPostRecomendation::class.java)
+            startActivity(intent)
+        }
+
+        binding.allTopPost.setOnClickListener {
+            val intent = Intent(requireActivity(), GridPostRecomendation::class.java)
+            startActivity(intent)
+        }
+
 
         homeViewModel.getSession().observe(requireActivity()){
             if (!it.isLogin){
@@ -82,6 +106,63 @@ class HomeFragment : Fragment() {
 
         builder.show()
 
+    }
+
+    private fun setUser(dataUserResponse: GetUserResponse){
+        Glide.with(this)
+            .load(dataUserResponse.getusers?.url)
+            .into(binding.ivProfile)
+    }
+
+    private fun setRecPost(listRecPost: List<DataItem?>?){
+        val adapter = ListRecomentPostAdapter()
+        adapter.submitList(listRecPost)
+        binding.rvRecomendation.adapter = adapter
+    }
+
+    private fun getRecomendationPost(){
+        homeViewModel.getSession().observe(viewLifecycleOwner){
+            if (it.isLogin){
+                homeViewModel.getRandomPost().observe(viewLifecycleOwner){ result ->
+                    when(result){
+                        is Result.Loading -> {
+                            //show loading
+                        }
+                        is Result.Success -> {
+                            setRecPost(result.data.data)
+                        }
+                        is Result.Error -> {
+                            // kalo data ga ke load
+                        }
+                    }
+                }
+            }
+        }
+    }
+    private fun setTopPost(listTopPost: List<DataItem?>?){
+        val adapter = ListRecomentPostAdapter()
+        adapter.submitList(listTopPost)
+        binding.rvTopPost.adapter = adapter
+    }
+
+    private fun getTopPost(){
+        homeViewModel.getSession().observe(viewLifecycleOwner){
+            if (it.isLogin){
+                homeViewModel.getLikedPost().observe(viewLifecycleOwner){ result ->
+                    when(result){
+                        is Result.Loading -> {
+                            //show loading
+                        }
+                        is Result.Success -> {
+                            setTopPost(result.data.data)
+                        }
+                        is Result.Error -> {
+                            // kalo data ga ke load
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun setRandomPost(listRandomPost: List<DataItem?>?){

@@ -6,7 +6,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.tourez.data.di.Injection
 import com.example.tourez.data.repository.UserRepository
 import com.example.tourez.view.login.LoginViewModel
+import com.example.tourez.view.menu.ui.detail.DetailPostViewModel
 import com.example.tourez.view.menu.ui.home.HomeViewModel
+import com.example.tourez.view.menu.ui.journey.JourneyViewModel
 import com.example.tourez.view.menu.ui.profile.ProfileViewModel
 import com.example.tourez.view.register.RegisterViewModel
 
@@ -25,6 +27,12 @@ class ViewModelFactory(private val repository: UserRepository): ViewModelProvide
             }
             modelClass.isAssignableFrom(ProfileViewModel::class.java) -> {
                 ProfileViewModel(repository) as T
+            }
+            modelClass.isAssignableFrom(JourneyViewModel::class.java) -> {
+                JourneyViewModel(repository) as T
+            }
+            modelClass.isAssignableFrom(DetailPostViewModel::class.java) -> {
+                DetailPostViewModel(repository) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel Class")
         }

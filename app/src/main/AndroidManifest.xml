@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -19,7 +18,15 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
-            android:name=".view.menu.MainMenuActivity"
+            android:name=".view.menu.ui.grid.GridPostRecomendation"
+            android:exported="false" />
+        <activity
+            android:name=".view.menu.ui.detail.DetailPostActivity"
+            android:exported="false"
+            android:label="@string/title_activity_detail_post"
+            android:theme="@style/Theme.TourEZ" />
+        <activity
+            android:name=".view.menu.ui.MainMenuActivity"
             android:exported="false"
             android:label="@string/title_activity_main_menu" />
         <activity
@@ -36,20 +43,21 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- Trigger Google Play services to install the backported photo picker module. -->
-        <!--suppress AndroidDomInspection -->
-        <service android:name="com.google.android.gms.metadata.ModuleDependencies"
+        </activity> <!-- Trigger Google Play services to install the backported photo picker module. -->
+        <!-- suppress AndroidDomInspection -->
+        <service
+            android:name="com.google.android.gms.metadata.ModuleDependencies"
             android:enabled="false"
             android:exported="false"
             tools:ignore="MissingClass">
             <intent-filter>
                 <action android:name="com.google.android.gms.metadata.MODULE_DEPENDENCIES" />
             </intent-filter>
-            <meta-data android:name="photopicker_activity:0:required" android:value="" />
-        </service>
 
+            <meta-data
+                android:name="photopicker_activity:0:required"
+                android:value="" />
+        </service>
     </application>
 
 </manifest>

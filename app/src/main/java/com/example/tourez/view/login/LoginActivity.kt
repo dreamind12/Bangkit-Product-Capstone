@@ -10,8 +10,7 @@ import com.example.tourez.data.Result
 import com.example.tourez.data.ViewModelFactory
 import com.example.tourez.databinding.ActivityLoginBinding
 import com.example.tourez.pref.UserModel
-import com.example.tourez.view.menu.MainMenuActivity
-import com.example.tourez.view.menu.ui.home.HomeFragment
+import com.example.tourez.view.menu.ui.MainMenuActivity
 import com.example.tourez.view.register.RegisterActivity
 
 class LoginActivity : AppCompatActivity() {

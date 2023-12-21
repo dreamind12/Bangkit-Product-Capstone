@@ -13,6 +13,8 @@ class ProfileViewModel(private val repository: UserRepository): ViewModel() {
         return repository.getSession().asLiveData()
     }
 
+    fun getDataUser(id: Int) = repository.getDataUser(id)
+
     fun logout(){
         viewModelScope.launch {
             repository.logout()

@@ -5,5 +5,6 @@
     <color name="black">#000000</color>
     <color name="nav_bottom">#6F12E7</color>
     <color name="light_mode">#03A9F4</color>
+    <color name="badges">#F6D06D</color>
     <color name="main_gradation"></color>
 </resources>
