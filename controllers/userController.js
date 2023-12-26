@@ -6,7 +6,6 @@ const Post = require('../models/post/postModel');
 const Invoice = require('../models/payment/invoiceModel');
 const Rating = require('../models/payment/ratingModel');
 const Wishlist = require('../models/likewish/wishlistModel');
-// const searchRecomend = require('../models/machineLearning/Search Recommendation/SearchRecommendation.ipynb');
 const asyncHandler = require('express-async-handler');
 const { generateToken } = require("../config/jwtToken");
 const bcrypt = require("bcrypt");
